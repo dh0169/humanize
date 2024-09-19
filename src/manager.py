@@ -35,16 +35,15 @@ class SessionManager():
         
         if username not in self.users:
             return False, f"{username} not in active users."
-
+            
         current_user : User = self.users[username]
-        if current_user.state == User.State.ACTIVE:
-            return False, f"user '{current_user.username}' is already in a session."
-        
+
         idx = None
 
         try:
-            
-            current_session : Session = None
+            if current_user.state == User.State.ACTIVE:
+                return False, f"user '{current_user.username}' is already in a session."
+
             if random_room:
                 current_session = random.choice(self.pending_sessions)
             else:
@@ -52,7 +51,7 @@ class SessionManager():
                 current_session : Session = self.pending_sessions[idx]
 
 
-            current_user : User = self.users[username]
+            
 
             if current_session.get_user_count() < current_session.max_players_allowed:
                 current_session.join_room(username)

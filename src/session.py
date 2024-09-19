@@ -16,7 +16,7 @@ class Session():
 
 
     def __init__(self, room="", robot=None, host=None, state=State.PENDING, max_players_allowed=4):
-        self.room = room if room else f"room{random.randint(0, 9999)}"
+        self.room = room
         self.players = []
         self.robot = robot
         self.messages = []

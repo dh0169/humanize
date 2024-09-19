@@ -43,6 +43,7 @@ def lobby():
 
             result = False
             msg = ""
+            room = ""
             if request.json.get("random"):
                 result, msg = session_manager.join_session(username=current_user.username, random_room=True)
             else:
@@ -57,7 +58,8 @@ def lobby():
                 )
                 result, msg = session_manager.join_session(username=current_user.username, room=room)
                 
-            room = room if room else "random" 
+            if not room:
+                room = "random" 
             if result:
                 return (
                     jsonify(
