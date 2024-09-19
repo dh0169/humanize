@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Humanize - AI Among Us Lobby</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+Knujsl5/siHP4L5n5e5r5L8cYCTtmCw5UQklK6J5vRpb6P" crossorigin="anonymous">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+        }
+        h1 {
+            font-size: 3em;
+            color: #4a90e2;
+        }
+        .hidden {
+            display: none;
+        }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Humanize - AI Among Us Lobby</h1>
+        <h2 id="welcomeMessage"></h2>
+
+        <!-- Initial Options -->
+        <div id="initial-options">
+            <button class="btn btn-primary" id="joinBtn">Join</button>
+            <button class="btn btn-secondary" id="hostBtn">Host</button>
+        </div>
+
+        <!-- Join Options -->
+        <form id="join-options" method="POST" action="/lobby" class="hidden">
+            <input type="hidden" name="action" value="join">
+            <button class="btn btn-primary" id="randomJoinBtn" name="join_type" value="random">Random</button>
+            <button class="btn btn-secondary" id="enterNameBtn" type="button">Enter Name</button>
+            <input id="nameField" class="hidden form-control mt-3" type="text" name="room_name" placeholder="Enter Match Name" />
+            <button type="submit" class="btn btn-primary mt-3">Submit</button>
+            <button type="button" class="btn btn-danger mt-3" id="backBtnJoin">Back</button>
+        </form>
+
+        <!-- Host Options -->
+        <form id="host-options" method="POST" action="/lobby" class="hidden">
+            <input type="hidden" name="action" value="host">
+            <input id="matchNameField" class="form-control mt-3" type="text" name="room_name" placeholder="Enter Match Name" required />
+            <p id="waitingMessage" class="hidden mt-3">Waiting for players...</p>
+            <button type="submit" class="btn btn-primary mt-3" id="submitHost">Submit</button>
+            <button type="button" class="btn btn-danger mt-3" id="backBtnHost">Back</button>
+        </form>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pzjw8f+ua7Kw1TIqNqztyF9CttMRtPnJz4yd6PqTFoa+YyboIHPPTR1/z1O4U6Xk" crossorigin="anonymous"></script>
+
+    <script>
+        // Initial Buttons
+        const joinBtn = document.getElementById('joinBtn');
+        const hostBtn = document.getElementById('hostBtn');
+
+        // Join Options
+        const joinOptions = document.getElementById('join-options');
+        const randomJoinBtn = document.getElementById('randomJoinBtn');
+        const enterNameBtn = document.getElementById('enterNameBtn');
+        const nameField = document.getElementById('nameField');
+        const backBtnJoin = document.getElementById('backBtnJoin');
+
+        // Host Options
+        const hostOptions = document.getElementById('host-options');
+        const matchNameField = document.getElementById('matchNameField');
+        const waitingMessage = document.getElementById('waitingMessage');
+        const backBtnHost = document.getElementById('backBtnHost');
+        const submitBtnHost = document.getElementById('submitHost');
+
+        joinBtn.addEventListener('click', () => {
+            document.getElementById('initial-options').classList.add('hidden');
+            joinOptions.classList.remove('hidden');
+        });
+
+        randomJoinBtn.addEventListener('click', () => {
+            alert('Joining a random game...');
+            joinOptions.submit();
+        });
+
+        enterNameBtn.addEventListener('click', () => {
+            nameField.classList.remove('hidden');
+        });
+
+        hostBtn.addEventListener('click', () => {
+            document.getElementById('initial-options').classList.add('hidden');
+            hostOptions.classList.remove('hidden');
+        });
+
+        // Back button functionality for Join
+        backBtnJoin.addEventListener('click', () => {
+            joinOptions.classList.add('hidden');
+            document.getElementById('initial-options').classList.remove('hidden');
+            nameField.classList.add('hidden');  // Hide name field if visible
+        });
+
+        // Back button functionality for Host
+        backBtnHost.addEventListener('click', () => {
+            hostOptions.classList.add('hidden');
+            document.getElementById('initial-options').classList.remove('hidden');
+            matchNameField.value = "";  // Clear the match name input
+        });
+
+        // Submit event for host form
+        hostOptions.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (matchNameField.value.trim()) {
+                matchNameField.classList.add('hidden');
+                backBtnHost.classList.add('hidden');
+                submitBtnHost.classList.add('hidden');
+                waitingMessage.classList.remove('hidden');
+                console.log(`Hosting match: ${matchNameField.value}`);
+                hostOptions.submit();
+            }
+        });
+    </script>
+</body>
+</html>
