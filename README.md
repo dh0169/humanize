@@ -58,5 +58,5 @@
 Once the setup is complete, run the game using:
 
 ```bash
-python3 humanize.py
+python3 main.py
 ```
