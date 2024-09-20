@@ -64,8 +64,8 @@
 
 ### Running the Game
 
-Once the setup is complete, run the game using:
-
 ```bash
 python3 main.py
 ```
+
+

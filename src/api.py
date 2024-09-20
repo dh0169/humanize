@@ -1,4 +1,4 @@
-import json
+import json, os
 
 from flask import Blueprint, session, request, jsonify, Response
 from functools import wraps
@@ -6,11 +6,12 @@ from src.session import Session
 from src.utils import is_registered
 from http import HTTPStatus
 
-from src import session_manager
+from src import session_manager, socketio
 from src.user import User
 
 
 bp = Blueprint("api", __name__, url_prefix="/api")
+ws_url = os.getenv("WS_URL")
 
 MAX_USERNAME_SIZE = 30
 
@@ -68,7 +69,7 @@ def lobby():
                         message=msg,
                         data={"room": curr_sesh.room},
                         did_succeed=True,
-                        ws="http://localhost:5000/chat"
+                        ws=ws_url
 
                     ),
                     HTTPStatus.OK,
@@ -93,14 +94,14 @@ def lobby():
                     ),
                     HTTPStatus.BAD_REQUEST,
                 )
-            result, msg, curr_sesh = session_manager.create_session(host=current_user.username, room=room)
+            result, msg, curr_sesh = session_manager.create_session(host=current_user.username, room=room, socketio=socketio)
             if(result):
                 return (
                     jsonify(
                         message=msg,
                         data={"room": curr_sesh.room},
                         did_succeed=True,
-                        ws="http://localhost:5000/chat"
+                        ws=ws_url
                     ),
                     HTTPStatus.OK,
                 )

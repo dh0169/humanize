@@ -1,5 +1,5 @@
 import random, enum, base64, json
-from flask_socketio import emit
+from flask_socketio import SocketIO
 # A session is a game session similar to that of multiplayer games(players join a match, this class represents the match)
 
 
@@ -15,7 +15,7 @@ class Session():
         INACTIVE = -1
 
 
-    def __init__(self, room="", robot=None, host=None, state=State.PENDING, max_players_allowed=4):
+    def __init__(self, room="", robot=None, host=None, state=State.PENDING, max_players_allowed=4, sock : SocketIO =None):
         self.room = room
         self.players = []
         self.robot = robot
@@ -24,10 +24,14 @@ class Session():
         self.state = state
         self.max_players_allowed = max_players_allowed
         self.waiting_room = None
+        self.sock = sock
+
         if(host):
             self.waiting_room = "waiting_room_"+base64.b64encode(host.encode('utf-8')).decode('utf-8')
             self.join_room(host)
 
+        if(sock):
+            self.send_message({"from" : "Server", "message" : f"Room \"{self.room}\" has be created!"})
 
 # Games need to be PENDING for players to join
     def join_room(self, name):        
@@ -38,6 +42,11 @@ class Session():
             
             self.players.append(name)
 
+    def send_message(self, message):
+        self.sock.emit("message", {"from" : "Server", "message" : message}, room=self.room)
+    
+    def send_json(self, obj):
+        pass
             
     # Need to reassign host if host leaves
     # def leave_session(self, name):
@@ -59,7 +68,12 @@ class Session():
         return len(self.players)
 
     def start_game(self):
+        self.send_message("")
         self.__set_state__(Session.State.ACTIVE)
+        return
+        # gameloop
+        while (self.state == Session.State.ACTIVE):
+            pass
     
     def end_game(self):
         self.__set_state__(Session.State.INACTIVE)

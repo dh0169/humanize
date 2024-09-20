@@ -2,6 +2,8 @@ import random, enum
 from src.session import Session
 from src.user import User
 
+from flask_socketio import SocketIO
+
 
 
 
@@ -18,8 +20,8 @@ class SessionManager():
 
 
     #TODO add message to return for example, return False, "Session Active"
-    def create_session(self, host="", room=""):
-        new_pending_session = Session(host=host, room=room, state=Session.State.PENDING, max_players_allowed=MAX_HUMAN_PLAYERS)
+    def create_session(self, host="", room="", socketio : SocketIO = None):
+        new_pending_session = Session(host=host, room=room, state=Session.State.PENDING, max_players_allowed=MAX_HUMAN_PLAYERS, sock=socketio)
         if new_pending_session in self.pending_sessions or new_pending_session in self.active_sessions:
             return False, "room already exists, please select different room name.", None
         
