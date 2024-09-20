@@ -3,8 +3,9 @@ This document provides instructions on how to use the Chat API Debug Page to tes
 
 ## Getting Started
 
-Open the HTML file in a web browser. You should see a page titled "Chat API Debug Page" with several sections.
 Ensure that your Chat API server is running on http://localhost:5000. If your server is running on a different address, update the API_URL constant in the JavaScript code in "templates/debug.html"
+
+Go to http://localhost:5000/debug and you should see the page below:
 
 ![image](/imgs/debug.png)
 
