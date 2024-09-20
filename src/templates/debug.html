@@ -317,7 +317,7 @@
                 socket.emit('message', { "message": message, "room": roomName, "from": currentUser });
                 const chatMessages = document.getElementById('chatMessages');
                 const messageElement = document.createElement('div');
-                messageElement.textContent = `${currentUser}: ${message}`;
+                messageElement.textContent = `You: ${message}`;
                 chatMessages.appendChild(messageElement);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
                 chatInput.value = '';
