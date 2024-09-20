@@ -97,7 +97,8 @@ def lobby():
                     jsonify(
                         message=msg,
                         data={"session": session},
-                        did_succeed=True
+                        did_succeed=True,
+                        socketio="http://localhost:5000/chat"
                     ),
                     HTTPStatus.OK,
                 )
@@ -144,7 +145,16 @@ def list_users():
 
 @bp.route("/register", methods=["POST"])
 def register():
-    username = request.json["username"]
+    username : str = request.json["username"]
+    if not username.isalnum():
+        return (
+            jsonify(
+                did_succeed=False,
+                message=f"username must be a max 30 characteers, alpha numeric only.",
+            ),
+            HTTPStatus.OK,
+        )
+    
     if username not in session_manager.users:
         session["user"] = username[:MAX_USERNAME_SIZE]
         tmp_user = User(session["user"])
@@ -164,12 +174,11 @@ def register():
 
 
 @bp.route("/logout")
+@is_reg
 def logout():
-    if "user" in session:
-        username = session.pop("user")
-        if username in session_manager.users:
-            session_manager.users.pop(username)
-        return jsonify(message=f"Logout successful. Adios, pal."), HTTPStatus.OK
-    return jsonify(message=f"No session found"), HTTPStatus.OK
+    username = session.pop("user")
+    if username in session_manager.users:
+        session_manager.users.pop(username)
+    return jsonify(message=f"Logout successful. Adios, pal."), HTTPStatus.OK
 
 

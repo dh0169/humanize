@@ -45,6 +45,8 @@ class SessionManager():
                 return False, f"user '{current_user.username}' is already in a session."
 
             if random_room:
+                if len(self.pending_sessions) == 0:
+                    return False, "No sessions available."
                 current_session = random.choice(self.pending_sessions)
             else:
                 idx = self.pending_sessions.index(Session(room))
@@ -59,6 +61,8 @@ class SessionManager():
                 
                 if current_session.get_user_count() == current_session.max_players_allowed:
                     current_session.start_game()
+                    self.pending_sessions.remove(current_session)
+                    self.active_sessions.append(current_session)
                 
                 return True, f"{current_user.username} has joined {current_session.room}!"
             else:
