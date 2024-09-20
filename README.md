@@ -2,6 +2,15 @@
 
 **Humanize - AI Among Us** is a fun and engaging multiplayer game where 4-6 players are grouped in an online chat. The twist? One of the players is an AI! The goal of the human players is to work together, chat, and strategize to figure out which of them is actually an AI (a sneaky LLM). Can the humans fish out the AI before time runs out?
 
+## Documentation Files
+
+- **[README.md](README.md)**: This file provides an overview of the project, including its purpose, setup instructions, and basic usage guidelines. It serves as the primary introduction to the project for new users and contributors.
+
+- **[API.md](API.md)**: This document details the API endpoints, request/response formats, and any authentication requirements for interacting with the chat server. It's essential for developers who want to integrate with or extend the chat functionality.
+
+- **[DEBUG.md](DEBUG.md)**: This file contains instructions for using the Chat API Debug Page, a tool designed for testing and troubleshooting the chat functionality. It guides users through the process of registering, joining rooms, and sending messages for debugging purposes.
+
+
 ## Features
 
 - **4-6 player online multiplayer game**
