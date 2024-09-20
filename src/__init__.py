@@ -20,8 +20,8 @@ def create_app(debug=False):
 		SECRET_KEY = os.getenv("SECRET_KEY"),
 		SESSION_COOKIE_SECURE=True,
     	SESSION_COOKIE_HTTPONLY=True,
-    	SESSION_COOKIE_SAMESITE='strict',
-    	PERMANENT_SESSION_LIFETIME=timedelta(minutes=30),
+    	SESSION_COOKIE_SAMESITE='none',
+    	PERMANENT_SESSION_LIFETIME=timedelta(minutes=60),
 		DEBUG = debug
 	)
 	

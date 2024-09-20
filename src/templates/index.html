@@ -5,18 +5,102 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat API Debug Page</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        section { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; }
-        button { margin-top: 10px; margin-right: 5px; }
-        #messages { margin-top: 20px; }
-        .message { margin-bottom: 10px; }
-        .list { list-style-type: none; padding: 0; }
-        .list li { margin-bottom: 5px; }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+        }
+        h1, h2, h3 {
+            color: #bb86fc;
+        }
+        section {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #3f3f3f;
+            background-color: #2d2d2d;
+            border-radius: 5px;
+        }
+        button {
+            margin-top: 10px;
+            margin-right: 5px;
+            background-color: #bb86fc;
+            color: #1e1e1e;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #a370d8;
+        }
+        input[type="text"] {
+            background-color: #3f3f3f;
+            color: #e0e0e0;
+            border: 1px solid #555;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        #messages {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #3f3f3f;
+            padding: 10px;
+            margin-bottom: 20px;
+            background-color: #2d2d2d;
+            border-radius: 5px;
+        }
+        .message {
+            margin-bottom: 10px;
+            background-color: #3f3f3f;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .list li {
+            margin-bottom: 5px;
+            background-color: #3f3f3f;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        #chatSection {
+            display: none;
+        }
+        #chatMessages {
+            height: 150px;
+            overflow-y: auto;
+            border: 1px solid #3f3f3f;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #2d2d2d;
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
     </style>
 </head>
 <body>
-    <h1>Humanize Chat API Debug Page</h1>
+    <h1>Chat API Debug Page</h1>
+
+    <div id="messages"></div>
 
     <section id="register">
         <h2>Register</h2>
@@ -48,11 +132,19 @@
         <ul id="usersList" class="list"></ul>
     </section>
 
-    <div id="messages"></div>
+    <section id="chatSection">
+        <h2>Chat</h2>
+        <div id="chatMessages"></div>
+        <input type="text" id="chatInput" placeholder="Type a message...">
+        <button onclick="sendMessage()">Send</button>
+    </section>
+
 
     <script>
         const API_URL = 'http://localhost:5000/api';
         let currentUser = null;
+        let socket = null;
+        let roomName = null;
 
         // Configure axios
         axios.defaults.withCredentials = true;
@@ -64,6 +156,7 @@
             messageElement.className = 'message';
             messageElement.textContent = message;
             messagesDiv.appendChild(messageElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
         async function register() {
@@ -86,6 +179,7 @@
                 const response = await axios.get(`${API_URL}/logout`);
                 showMessage(response.data.message);
                 currentUser = null;
+                disconnectSocket();
             } catch (error) {
                 showMessage(`Error: ${error.response?.data?.message || error.message}`);
             }
@@ -96,6 +190,7 @@
             try {
                 const response = await axios.post(`${API_URL}/lobby`, { type: 'join', room });
                 showMessage(`Join room response: ${JSON.stringify(response.data)}`);
+                connectSocket(response.data.ws, response.data.data.room);
             } catch (error) {
                 showMessage(`Error: ${error.response?.data?.message || error.message}`);
             }
@@ -106,6 +201,7 @@
             try {
                 const response = await axios.post(`${API_URL}/lobby`, { type: 'host', room });
                 showMessage(`Host room response: ${JSON.stringify(response.data)}`);
+                connectSocket(response.data.ws, response.data.data.room);
             } catch (error) {
                 showMessage(`Error: ${error.response?.data?.message || error.message}`);
             }
@@ -115,6 +211,8 @@
             try {
                 const response = await axios.post(`${API_URL}/lobby`, { type: 'join', random: true });
                 showMessage(`Join random room response: ${JSON.stringify(response.data)}`);
+                connectSocket(response.data.ws, response.data.data.room);
+
             } catch (error) {
                 showMessage(`Error: ${error.response?.data?.message || error.message}`);
             }
@@ -167,6 +265,62 @@
                 showMessage(response.data.message);
             } catch (error) {
                 showMessage(`Error: ${error.response?.data?.message || error.message}`);
+            }
+        }
+
+        function connectSocket(socketUrl, currentRoom) {
+            if (socket) {
+                socket.disconnect();
+            }
+
+            socket = io(socketUrl, {
+                transports: ['websocket'],
+                withCredentials: true
+            });
+
+            roomName = currentRoom
+            
+            socket.on('connect', () => {
+                console.log('Connected to chat server');
+                document.getElementById('chatSection').style.display = 'block';
+                socket.emit("join", {"username" : currentUser, "room" : roomName})
+            });
+
+            socket.on('disconnect', () => {
+                document.getElementById('chatSection').style.display = 'none';
+            });
+
+            socket.on('message', (data) => {
+                if (data.from == currentUser)
+                    return;
+                const chatMessages = document.getElementById('chatMessages');
+                const messageElement = document.createElement('div');
+                messageElement.textContent = `${data.from}: ${data.message}`;
+                chatMessages.appendChild(messageElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                console.log(data)
+            });
+        }
+
+        function disconnectSocket() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                document.getElementById('chatSection').style.display = 'none';
+            }
+        }
+
+        function sendMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value;
+            if (message && socket) {
+                socket.emit('message', { "message": message, "room": roomName, "from": currentUser });
+                const chatMessages = document.getElementById('chatMessages');
+                const messageElement = document.createElement('div');
+                messageElement.textContent = `${currentUser}: ${message}`;
+                chatMessages.appendChild(messageElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                chatInput.value = '';
             }
         }
     </script>

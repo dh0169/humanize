@@ -14,44 +14,47 @@ bp = Blueprint('chat', __name__, url_prefix="/chat")
 def handle_connect():
 	if 'user' in session:
 		user = session['user']
-		print({"username" : user})
-		emit("connect", {"username" : user})
-		join_room("lobby")
+		print("User connected:", {"username" : user})
 		
 	
-# @socketio.on('disconnect', namespace='/chat')
-# def handle_disconnect():
-# 	if 'user' in session:
-# 		name = session.pop('user')
-# 		active_users.remove(name)
+@socketio.on('disconnect', namespace='/chat')
+def handle_disconnect():
+	if 'user' in session:
+		username = session['user']
+		print(username, "has disconnected.")
+		emit('message', {'from' : "Server" ,'message' : f'{username} has disconnected!'})
+
 
 	
 @socketio.on('join', namespace='/chat')
 def handle_join(join_req):
 	''' '''
-	if 'user' in session:	
+	if 'user' in session:
+		print(join_req)
 		room = join_req["room"]
-		type_c = join_req['type']
+		username = join_req['username']
 
-		if not room or not type_c:
+		if not room or not username:
 			emit('error', {'msg': 'Username and room name are required!'})
 			return
 
-		username = session['user']
-		session['user'] = username
-
 		#Tie the id to the session object, Set the cookie to the id
 		join_room(room)
-		emit('message', {'msg' : f'{username} has entered the chat!'}, room=room)
+		print(f'{username} has entered {room}!')
+		emit('message', {'from' : "Server" ,'message' : f'{username} has entered {room}!'}, room=room)
 
-
+# Process room here
 @socketio.on('message', namespace='/chat')
 def handle_msg(data):	
 	if 'user' in session:	
+		message = data["message"]
+		sender = data["from"]
+		room = data["room"]
 		print(data)
-		username = data["user"]["name"]
-		send({"text": data['text'] ,"user":{"name": username,"icon": username[0]},"timestamp": data["timestamp"]}, to="lobby")
-	
+		#username = data["user"]["name"]
+		#send({"text": data['text'] ,"user":{"name": username,"icon": username[0]},"timestamp": data["timestamp"]}, to="lobby")
+		emit("message", {"message" : message, "from" : sender}, room=room)
+
 
 @bp.route("/")
 def chat():

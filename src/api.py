@@ -2,6 +2,7 @@ import json
 
 from flask import Blueprint, session, request, jsonify, Response
 from functools import wraps
+from src.session import Session
 from src.utils import is_registered
 from http import HTTPStatus
 
@@ -44,8 +45,9 @@ def lobby():
             result = False
             msg = ""
             room = ""
+            curr_sesh  : Session = None
             if request.json.get("random"):
-                result, msg = session_manager.join_session(username=current_user.username, random_room=True)
+                result, msg, curr_sesh  = session_manager.join_session(username=current_user.username, random_room=True)
             else:
                 room = request.json.get("room")
                 if not room or type(room) is not str:
@@ -56,7 +58,7 @@ def lobby():
                     ),
                     HTTPStatus.BAD_REQUEST,
                 )
-                result, msg = session_manager.join_session(username=current_user.username, room=room)
+                result, msg, curr_sesh = session_manager.join_session(username=current_user.username, room=room)
                 
             if not room:
                 room = "random" 
@@ -64,9 +66,9 @@ def lobby():
                 return (
                     jsonify(
                         message=msg,
-                        data={"room": room},
+                        data={"room": curr_sesh.room},
                         did_succeed=True,
-                        socketio="http://localhost:5000/chat"
+                        ws="http://localhost:5000/chat"
 
                     ),
                     HTTPStatus.OK,
@@ -91,14 +93,14 @@ def lobby():
                     ),
                     HTTPStatus.BAD_REQUEST,
                 )
-            result, msg = session_manager.create_session(host=current_user.username, room=room)
+            result, msg, curr_sesh = session_manager.create_session(host=current_user.username, room=room)
             if(result):
                 return (
                     jsonify(
                         message=msg,
-                        data={"session": session},
+                        data={"room": curr_sesh.room},
                         did_succeed=True,
-                        socketio="http://localhost:5000/chat"
+                        ws="http://localhost:5000/chat"
                     ),
                     HTTPStatus.OK,
                 )
@@ -159,7 +161,7 @@ def register():
         session["user"] = username[:MAX_USERNAME_SIZE]
         tmp_user = User(session["user"])
         session_manager.add_user(tmp_user)
-        print(tmp_user.to_dict())
+        print("User registered:", tmp_user.to_dict())
         return (
             jsonify(
                 did_succeed=True,
