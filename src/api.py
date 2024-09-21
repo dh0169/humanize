@@ -1,4 +1,4 @@
-import json, os
+import os
 
 from flask import Blueprint, session, request, jsonify, Response
 from functools import wraps
@@ -12,7 +12,6 @@ from src.user import User
 
 bp = Blueprint("api", __name__, url_prefix="/api")
 ws_url = os.getenv("WS_URL")
-
 MAX_USERNAME_SIZE = 30
 
 def is_reg(f):
@@ -61,9 +60,8 @@ def lobby():
                 )
                 result, msg, curr_sesh = session_manager.join_session(username=current_user.username, room=room)
                 
-            if not room:
-                room = "random" 
             if result:
+                current_user.session = curr_sesh
                 return (
                     jsonify(
                         message=msg,
@@ -94,8 +92,9 @@ def lobby():
                     ),
                     HTTPStatus.BAD_REQUEST,
                 )
-            result, msg, curr_sesh = session_manager.create_session(host=current_user.username, room=room, socketio=socketio)
+            result, msg, curr_sesh = session_manager.create_session(host=current_user.username, room=room, sock=socketio)
             if(result):
+                current_user.session = curr_sesh
                 return (
                     jsonify(
                         message=msg,
@@ -121,7 +120,6 @@ def lobby():
 
 
 @bp.route("/lobby/sessions", methods=["GET"])
-@is_reg
 def list_lobby():
     pending_games = [s.to_dict() for s in session_manager.pending_sessions]
     active_games = [s.to_dict() for s in session_manager.active_sessions]
@@ -135,9 +133,9 @@ def list_lobby():
     )
 
 @bp.route("/lobby/users", methods=["GET"])
-@is_reg
 def list_users():
-    user_dicts = [u.to_dict() for u in session_manager.users.values()]
+    user_dicts = [v.to_dict() for v in session_manager.users.values()]
+    print(user_dicts)
     return (
         jsonify(
             message="Users in game",

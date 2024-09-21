@@ -291,14 +291,14 @@
             });
 
             socket.on('message', (data) => {
-                if (data.from == currentUser)
-                    return;
+                console.log(data)
+                if(data.from == currentUser)
+                    return
                 const chatMessages = document.getElementById('chatMessages');
                 const messageElement = document.createElement('div');
                 messageElement.textContent = `${data.from}: ${data.message}`;
                 chatMessages.appendChild(messageElement);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
-                console.log(data)
             });
         }
 
