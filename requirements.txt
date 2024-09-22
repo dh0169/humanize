@@ -4,5 +4,5 @@ python-socketio==5.8.0
 eventlet==0.33.3
 mariadb==1.1.4
 flask_session
-
 flask_cors
+requests

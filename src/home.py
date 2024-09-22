@@ -4,7 +4,11 @@ bp = Blueprint("home", __name__, url_prefix="/")
 
 
 @bp.route("/debug")
-def index():
+def debug():
 	return render_template("debug.html")
+
+@bp.route("/")
+def index():
+	return render_template("index.html")
 
 

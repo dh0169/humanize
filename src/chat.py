@@ -13,8 +13,7 @@ def handle_connect():
 	if 'user' in session:
 		user = session['user']
 		print("Connect:", {"username" : user})
-		
-	
+
 @socketio.on('disconnect', namespace='/chat')
 def handle_disconnect():
 	if 'user' in session:
@@ -44,7 +43,6 @@ def handle_disconnect():
 	
 @socketio.on('join', namespace='/chat')
 def handle_join(join_req):
-	''' '''
 	if 'user' in session:
 		room = join_req["room"]
 		username = join_req['username']
@@ -58,7 +56,7 @@ def handle_join(join_req):
 		print(f'Join: {username} has entered {room}!')
 		emit('message', {'from' : "Server" ,'message' : f'{username} has entered the chat!'}, room=room)
 
-# Process room here
+# On new message
 @socketio.on('message', namespace='/chat')
 def handle_msg(data):
 	if 'user' in session and "from" in data:	
@@ -70,21 +68,12 @@ def handle_msg(data):
 				return
 			if sender in s.players:
 				message = data["message"]
-				
+
 				msg = Message(sender=sender, message=message, room=room)
 				s.messages.append(msg)
-				
+
 				print([m.to_dict() for m in s.messages])
 				#username = data["user"]["name"]
 				#send({"text": data['text'] ,"user":{"name": username,"icon": username[0]},"timestamp": data["timestamp"]}, to="lobby")
 				emit("message", msg.to_dict(), room=room, include_self=False)
 
-@bp.route("/")
-def chat():
-		return render_template("chat.html")
-
-
-def bg_task():
-	while True:
-		socketio.sleep(3)
-		socketio.emit('message', {'msg': 'Background task update'}, namespace='/chat')
