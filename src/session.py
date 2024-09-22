@@ -28,8 +28,6 @@ class Session:
             self.join_room(host)
 
 
-
-
     def join_room(self, name):
         if name not in self.players and self.state == Session.State.PENDING:
             if not self.host:
@@ -46,9 +44,8 @@ class Session:
         if self.players:
             new_host = random.choice(self.players)
             self.host = new_host
-            return new_host
-        self.end_game()
-        return None
+        else:
+            self.host = ""
 
     def disconnect_player(self, usr):
         if usr.username in self.players:
@@ -56,15 +53,15 @@ class Session:
             usr.session = None
             if self.is_host(usr.username):
                 self.reassign_host()
-                
-                def send_new_host():
-                    self.socketio.sleep(3)
-                    self.send_message("Server", f"{self.host} is the new host.")
+                if self.host:
+                    self.socketio.start_background_task(target=self.send_message_with_delay, sender="Server", message=f"{self.host} is the new host.", delay=1)
 
-                self.socketio.start_background_task(target=send_new_host)
+    def send_message_with_delay(self, sender, message, delay = 5):
+        self.socketio.sleep(delay)
+        self.send_message(sender=sender, message=message)
+
 
     def send_message(self, sender, message):
-        self.socketio.sleep(0)
         msg = Message(sender=sender, message=message, room=self.room)
         self.messages.append(msg)
         self.socketio.emit("message", msg.to_dict(), room=self.room, namespace='/chat')
@@ -85,6 +82,9 @@ class Session:
     def start_game(self):
         self.__set_state__(Session.State.ACTIVE)
         self.socketio.start_background_task(target=self.run_session)
+        
+    def end_game(self):
+        self.__set_state__(Session.State.INACTIVE)
 
     def is_running(self):
         return self.state == Session.State.ACTIVE   
@@ -92,8 +92,6 @@ class Session:
     def enough_players(self):
         return len(self.players) > 1     
 
-    def end_game(self):
-        self.__set_state__(Session.State.INACTIVE)
 
     def __eq__(self, value: object) -> bool:
         return self.room == value.room
@@ -108,9 +106,6 @@ class Session:
             'max_players_allowed': self.max_players_allowed,
             'waiting_room': self.waiting_room
         }
-
-    def to_json(self):
-        return json.dumps(self.to_dict())
 
     @classmethod
     def from_dict(cls, data):
@@ -132,17 +127,24 @@ class Session:
 
 
     def run_session(self):
-        self.socketio.sleep(3)
-        self.send_message("Server", "Game is starting...")
-        self.socketio.sleep(3)
-        self.send_message("Server", "Some prompt here! Goodluck!")
+        self.send_message_with_delay(sender="Server", message="Game is starting...", delay=1)
+        self.send_message_with_delay(sender="Server", message="Some prompt here! Goodluck!", delay=3)
         while self.get_state() == Session.State.ACTIVE:
+            curr_user = "AI"
+
+            if not self.enough_players():
+                break
+
+            #Player Impersonation Feature
+            # if random.randint(1,2) % 2 == 0:
+            #     curr_user = random.choice(self.players)
+
             time_to_think = random.randint(3, 5)
             self.socketio.sleep(time_to_think)
             joke_son = requests.get("https://official-joke-api.appspot.com/random_joke").json()
-            self.send_message("AI", joke_son["setup"])
-            self.socketio.sleep(random.randint(3,7))
-            self.send_message("AI", joke_son["punchline"])
+            self.send_message(curr_user, joke_son["setup"])
+            self.socketio.sleep(random.randint(3,5))
+            self.send_message(curr_user, joke_son["punchline"])
         
         self.send_message("Server", f"Game over. Closing '{self.room}'.")
         self.socketio.close_room(self.room)

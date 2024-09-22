@@ -3,6 +3,7 @@ from flask_socketio import emit, join_room, leave_room, send
 from src.utils import is_registered
 from src import socketio, session_manager
 from src.message import Message
+from src.session import Session
 
 
 bp = Blueprint('chat', __name__, url_prefix="/chat")
@@ -15,8 +16,8 @@ def handle_connect():
 		print("Connect:", {"username" : user})
 
 @socketio.on('disconnect', namespace='/chat')
+@is_registered
 def handle_disconnect():
-	if 'user' in session:
 		username = session['user']
 
 		#Everything below can become a session manager function
@@ -24,14 +25,15 @@ def handle_disconnect():
 			tmp_user = session_manager.users[username]
 			if tmp_user.session: # is there a session?
 				tmp_session = tmp_user.session
-				tmp_user.disconnect() # Session becomes null
+				tmp_user.disconnect() # Remove user from Session, user.session becomes null
 				if tmp_session.is_running() and not tmp_session.enough_players():
 					tmp_session.end_game()
 					if tmp_session in session_manager.active_sessions:
 						session_manager.active_sessions.remove(tmp_session)
-
-					if tmp_session in session_manager.pending_sessions:
-						session_manager.pending_sessions.remove(tmp_session)
+					
+				# if tmp_session.get_state() == Session.State.:
+				# 	if tmp_session in session_manager.active_sessions:
+				# 		session_manager.active_sessions.remove(tmp_session)
 			
 				emit('message', {'from' : "Server" ,'message' : f'{username} has disconnected!'}, room=tmp_session.room)
 

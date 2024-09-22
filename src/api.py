@@ -1,40 +1,27 @@
 import os
 
 from flask import Blueprint, session, request, jsonify, Response
-from functools import wraps
-from src.session import Session
-from src.utils import is_registered
 from http import HTTPStatus
 
 from src import session_manager, socketio
 from src.user import User
+from src.session import Session
+from src.utils import is_registered
 
 
 bp = Blueprint("api", __name__, url_prefix="/api")
 ws_url = os.getenv("WS_URL")
 MAX_USERNAME_SIZE = 30
 
-def is_reg(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if "user" not in session:
-            return jsonify(did_succeed=False, message="Please register a username"), 401
-        elif session["user"] not in session_manager.users:
-            return jsonify(did_succeed=False, message="Please register a username"), 401
-        return f(*args, **kwargs)
-
-    return decorated_function
 
 
 @bp.route("/")
 def index():
     return jsonify(message="Chat API is running"), HTTPStatus.OK
 
-# Lobby group
-
 
 @bp.route("/lobby", methods=["GET", "POST"])
-@is_reg
+@is_registered
 def lobby():
     current_user : User = session_manager.users[session['user']]
 
@@ -125,7 +112,7 @@ def list_lobby():
     active_games = [s.to_dict() for s in session_manager.active_sessions]
     return (
         jsonify(
-            message=f"Sessions available to join",
+            message=f"Game sessions",
             pending_sessions=pending_games,
             active_sessions=active_games
         ),
@@ -138,7 +125,7 @@ def list_users():
     print(user_dicts)
     return (
         jsonify(
-            message="Users in game",
+            message="Registered users",
             users=user_dicts,
         ),
         HTTPStatus.OK,
@@ -147,25 +134,26 @@ def list_users():
 @bp.route("/register", methods=["POST"])
 def register():
     username : str = request.json["username"]
-    if not username.isalnum():
+    if not username.isalnum() or len(username) > 30:
         return (
             jsonify(
                 did_succeed=False,
-                message=f"username must be a max 30 characteers, alpha numeric only.",
+                message=f"username must be a max 30 characters, alpha numeric only.",
             ),
             HTTPStatus.OK,
         )
     
     if username not in session_manager.users:
-        session["user"] = username[:MAX_USERNAME_SIZE]
+        session["user"] = username
         tmp_user = User(session["user"])
         session_manager.add_user(tmp_user)
+
         print("User registered:", tmp_user.to_dict())
         return (
             jsonify(
                 did_succeed=True,
                 message=f"Registration Success!",
-                data={"user": session["user"]},
+                data={"user": tmp_user.username}
             ),
             HTTPStatus.OK,
         )
@@ -175,11 +163,11 @@ def register():
 
 
 @bp.route("/logout")
-@is_reg
+@is_registered
 def logout():
     username = session.pop("user")
-    if username in session_manager.users:
-        session_manager.users.pop(username)
+    user : User = session_manager.users.pop(username)
+    user.disconnect()
     return jsonify(message=f"Logout successful. Adios, pal."), HTTPStatus.OK
 
 

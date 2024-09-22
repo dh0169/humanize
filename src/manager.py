@@ -96,10 +96,16 @@ class SessionManager():
     def add_user(self, user : User):
         if user:
             self.users[user.username] = user
+        
+    def is_active_user(self, user : User):
+        if user in self.users:
+            return True
+        return False
     
     def remove_user(self, username):
         if username in self.users.keys():
             self.users.pop(username)
+    
 
 
 
