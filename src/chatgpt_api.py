@@ -1,11 +1,13 @@
 from openai import OpenAI
-import os
-from dotenv import load_dotenv
+from config import OPENAI_API_KEY
 
-load_dotenv()
+#If just running the chatgpt_api.py, need to call load_dotenv()
+if not OPENAI_API_KEY:
+    from dotenv import load_dotenv
+    load_dotenv()
 
 client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY"),
+    api_key= OPENAI_API_KEY,
 )
 
 # TODO: The pre-prompt is not working as expected, needs to figure out why role: system is not working. 

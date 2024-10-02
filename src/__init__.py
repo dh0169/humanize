@@ -1,26 +1,29 @@
-from datetime import timedelta
-from flask import Flask, session, redirect
+import eventlet
+eventlet.monkey_patch()
+
+from flask import Flask
+
 from flask_socketio import SocketIO
 from flask_cors import CORS
-from dotenv import load_dotenv
-
 from src.manager import SessionManager
-import os
+from src.config import FLASK_SECRET_KEY
 
 
-app = Flask(__name__)
+
+
 socketio = SocketIO()
 session_manager = SessionManager()
-CORS(app)
 
 def create_app(debug=False):
 	"""Create an application."""
-	load_dotenv()
+	app = Flask(__name__)
 	app.config.from_mapping(
-		SECRET_KEY = os.getenv("SECRET_KEY"),
+		SECRET_KEY = FLASK_SECRET_KEY,
 		DEBUG = debug
 	)
 	
+	
+
 	from .home import bp as home_blueprint
 	app.register_blueprint(home_blueprint)
 
@@ -30,6 +33,9 @@ def create_app(debug=False):
 	from .api import bp as api_blueprint
 	app.register_blueprint(api_blueprint)
 
+	
+	CORS(app)
+	
 	socketio.init_app(app, async_model="eventlet")
 
 	return app

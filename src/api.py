@@ -6,8 +6,10 @@ from http import HTTPStatus
 from src import session_manager, socketio
 from src.user import User
 from src.session import Session
-from src.utils import is_registered
+from src.utils import is_registered, handle_db_errors
+from src.models import db_session, UserModel, SessionModel, SessionState
 
+from sqlalchemy import select
 
 bp = Blueprint("api", __name__, url_prefix="/api")
 ws_url = os.getenv("WS_URL")
@@ -22,8 +24,9 @@ def index():
 
 @bp.route("/lobby", methods=["GET", "POST"])
 @is_registered
+@handle_db_errors
 def lobby():
-    current_user : User = session_manager.users[session['user']]
+    user_id = session['user']
 
     if request.method == "POST":
         if request.json.get("type") == "join":
@@ -32,9 +35,8 @@ def lobby():
             result = False
             msg = ""
             room = ""
-            curr_sesh  : Session = None
             if request.json.get("random"):
-                result, msg, curr_sesh  = session_manager.join_session(username=current_user.username, random_room=True)
+                result, msg, room  = session_manager.join_session(user_id=user_id, random_room=True, sock=socketio)
             else:
                 room = request.json.get("room")
                 if not room or type(room) is not str:
@@ -45,14 +47,13 @@ def lobby():
                     ),
                     HTTPStatus.BAD_REQUEST,
                 )
-                result, msg, curr_sesh = session_manager.join_session(username=current_user.username, room=room)
+                result, msg= session_manager.join_session(user_id=user_id, room=room, sock=socketio)
                 
             if result:
-                current_user.session = curr_sesh
                 return (
                     jsonify(
                         message=msg,
-                        data={"room": curr_sesh.room},
+                        data={"room": room},
                         did_succeed=True,
                         ws=ws_url
 
@@ -79,13 +80,12 @@ def lobby():
                     ),
                     HTTPStatus.BAD_REQUEST,
                 )
-            result, msg, curr_sesh = session_manager.create_session(host=current_user.username, room=room, sock=socketio)
+            result, msg = session_manager.create_session(host_id=user_id, room=room, sock=socketio)
             if(result):
-                current_user.session = curr_sesh
                 return (
                     jsonify(
                         message=msg,
-                        data={"room": curr_sesh.room},
+                        data={"room": room},
                         did_succeed=True,
                         ws=ws_url
                     ),
@@ -99,39 +99,49 @@ def lobby():
                     ),
                     HTTPStatus.OK,
                 )
-                 
-    return (
-        jsonify(message=f"Welcome {current_user.username}!", data={"user": current_user.to_dict()}),
-        HTTPStatus.OK,
-    )
+    with db_session() as db:
+        current_user = db.query(UserModel).filter_by(id=user_id).one()
+        return (
+            jsonify(message=f"Welcome {current_user.username}!", data={"user": current_user.to_dict()}),
+            HTTPStatus.OK,
+        )
 
 
 @bp.route("/lobby/sessions", methods=["GET"])
+@handle_db_errors
 def list_lobby():
-    pending_games = [s.to_dict() for s in session_manager.pending_sessions]
-    active_games = [s.to_dict() for s in session_manager.active_sessions]
-    return (
-        jsonify(
-            message=f"Game sessions",
-            pending_sessions=pending_games,
-            active_sessions=active_games
-        ),
-        HTTPStatus.OK,
-    )
+    with db_session() as db:
+        pending_games = [gs.to_dict() for gs in db.query(SessionModel).filter_by(state=SessionState.PENDING).all()]
+        active_games = [gs.to_dict() for gs in db.query(SessionModel).filter_by(state=SessionState.ACTIVE).all()]
+
+        return (
+            jsonify(
+                message=f"Game sessions",
+                pending_sessions=pending_games,
+                active_sessions=active_games
+            ),
+            HTTPStatus.OK,
+        )
 
 @bp.route("/lobby/users", methods=["GET"])
+@handle_db_errors
 def list_users():
-    user_dicts = [v.to_dict() for v in session_manager.users.values()]
-    print(user_dicts)
-    return (
-        jsonify(
-            message="Registered users",
-            users=user_dicts,
-        ),
-        HTTPStatus.OK,
-    )
+    user_dicts = []
+    with db_session() as db:
+        users = db.query(UserModel).all()
+        user_dicts = [u.to_dict() for u in users]
+        
+        return (
+            jsonify(
+                message="Registered users",
+                users=user_dicts,
+            ),
+            HTTPStatus.OK,
+        )
+
 
 @bp.route("/register", methods=["POST"])
+@handle_db_errors
 def register():
     username : str = request.json["username"]
     if not username.isalnum() or len(username) > 30:
@@ -143,31 +153,41 @@ def register():
             HTTPStatus.OK,
         )
     
-    if username not in session_manager.users:
-        session["user"] = username
-        tmp_user = User(session["user"])
-        session_manager.add_user(tmp_user)
+    with db_session() as db:
+        tmp_user = db.query(UserModel).filter_by(username=username).one_or_none()
+        if not tmp_user:
+            tmp_user = UserModel(username=username)             
+            db.add(tmp_user)
+            db.flush() #Send pending changes to db so that we can get id number, autoassigned primary key
+            
+            session["user"] = tmp_user.id
 
-        print("User registered:", tmp_user.to_dict())
-        return (
-            jsonify(
-                did_succeed=True,
-                message=f"Registration Success!",
-                data={"user": tmp_user.username}
-            ),
-            HTTPStatus.OK,
-        )
 
-        # TODO Maybe return similar names to originall typed name
-    return jsonify(did_succeed=False, message=f"User already exists"), HTTPStatus.OK
+
+            print("User registered:", tmp_user.to_dict())
+            return (
+                jsonify(
+                    did_succeed=True,
+                    message=f"Registration Success!",
+                    data={"user": tmp_user.username}
+                ),
+                HTTPStatus.OK,
+            )
+        
+        else:
+            return jsonify(did_succeed=False, message=f"User already exists"), HTTPStatus.OK
+
+
 
 
 @bp.route("/logout")
 @is_registered
+@handle_db_errors
 def logout():
-    username = session.pop("user")
-    user : User = session_manager.users.pop(username)
-    user.disconnect()
+    user_id = session["user"]
+    session_manager.disconnect_player(user_id=user_id)
+    if "user" in session:
+        session.pop("user")
     return jsonify(message=f"Logout successful. Adios, pal."), HTTPStatus.OK
 
 

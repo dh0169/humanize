@@ -1,81 +1,93 @@
-from flask import Blueprint, redirect, session, url_for, render_template
-from flask_socketio import emit, join_room, leave_room, send
-from src.utils import is_registered
+from flask import Blueprint, session
+from flask_socketio import emit, join_room
 from src import socketio, session_manager
-from src.message import Message
-from src.session import Session
-
+from src.models import UserModel, UserState, MessageModel, SessionModel, db_session
+from src.utils import send_message_with_delay, send_message
+from datetime import datetime
 
 bp = Blueprint('chat', __name__, url_prefix="/chat")
 
 
+
+def is_registered(func):
+	def wrapper(*args, **kwargs):
+		if 'user' not in session:
+			send_message(sockio=socketio, sender_name="Server", session_id=None, message='User is not registered')
+			return
+		return func(*args, **kwargs)
+	return wrapper
+
 @socketio.on('connect', namespace='/chat')
+@is_registered
 def handle_connect():
-	if 'user' in session:
-		user = session['user']
-		print("Connect:", {"username" : user})
+	user = session['user']
+	print("Connect:", {"user_id" : user})
+
 
 @socketio.on('disconnect', namespace='/chat')
 @is_registered
 def handle_disconnect():
-		username = session['user']
-
+		user_id = session['user']
 		#Everything below can become a session manager function
-		if username in session_manager.users:
-			tmp_user = session_manager.users[username]
-			if tmp_user.session: # is there a session?
-				tmp_session = tmp_user.session
-				tmp_user.disconnect() # Remove user from Session, user.session becomes null
-				if tmp_session.is_running() and not tmp_session.enough_players():
-					tmp_session.end_game()
-					if tmp_session in session_manager.active_sessions:
-						session_manager.active_sessions.remove(tmp_session)
-					
-				# if tmp_session.get_state() == Session.State.:
-				# 	if tmp_session in session_manager.active_sessions:
-				# 		session_manager.active_sessions.remove(tmp_session)
-			
-				emit('message', {'from' : "Server" ,'message' : f'{username} has disconnected!'}, room=tmp_session.room)
-
-
-			session_manager.users.pop(username)
-			print(username, "has disconnected.")
-
+		with db_session() as db:
+			tmp_user = db.query(UserModel).filter_by(id=user_id).one_or_none()
+			if tmp_user:
+				if tmp_user.session_id: # is there a session?
+					current_session = db.query(SessionModel).filter_by(id=tmp_user.session_id).one_or_none() 
+					print(current_session)
+					if current_session:
+						session_manager.disconnect_player(tmp_user.id)
+						send_message(sockio=socketio, sender_name="Server", session_id=None, room=current_session.room, message=f'{tmp_user.username} has disconnected!')
+				print(f"User {tmp_user.username} has disconnected!")
 
 	
 @socketio.on('join', namespace='/chat')
+@is_registered
 def handle_join(join_req):
-	if 'user' in session:
-		room = join_req["room"]
-		username = join_req['username']
+	
+	room = join_req["room"]
+	username = join_req['username']
 
-		if not room or not username:
-			emit('error', {'msg': 'Username and room name are required!'})
+	if not room or not username:
+		emit('error', {'msg': 'Username and room name are required!'})
+		return
+	
+	with db_session() as db:
+		user_id = session['user']
+		tmp_user = db.query(UserModel).filter_by(id=user_id).one_or_none()
+		print(tmp_user)
+		if not tmp_user or not tmp_user.session_id:
+			send_message(sockio=socketio, sender_name="Server", session_id=None, room=None, message="Please join a valid session")
 			return
+		tmp_session = db.query(SessionModel).filter_by(id=tmp_user.session_id).one_or_none()
+
+		print(tmp_session)
 
 		#Tie the id to the session object, Set the cookie to the id
 		join_room(room)
 		print(f'Join: {username} has entered {room}!')
-		emit('message', {'from' : "Server" ,'message' : f'{username} has entered the chat!'}, room=room)
+		send_message(sockio=socketio, sender_name="Server", session_id=None, room=room, message=f'{tmp_user.username} has entered the chat!')
 
 # On new message
 @socketio.on('message', namespace='/chat')
+@is_registered
 def handle_msg(data):
-	if 'user' in session and "from" in data:	
+	if "from" in data:	
 		sender = data["from"]
-		if sender == session['user'] and "room" in data:
-			room = data["room"]
-			s = session_manager.get_session(room)
-			if not s: # not a valid session, cant send messages
+		with db_session() as db:
+			tmp_user = db.query(UserModel).filter_by(id=session['user']).one_or_none()
+			if not tmp_user:
 				return
-			if sender in s.players:
-				message = data["message"]
+			elif sender == tmp_user.username and "room" in data:
+				room = data["room"]
+				s = db.query(SessionModel).filter_by(id=tmp_user.session_id).one_or_none()
+				if not s: # not a valid session, cant send messages
+					return
+				if tmp_user in s.players:
+					message = data["message"]
 
-				msg = Message(sender=sender, message=message, room=room)
-				s.messages.append(msg)
 
-				print([m.to_dict() for m in s.messages])
-				#username = data["user"]["name"]
-				#send({"text": data['text'] ,"user":{"name": username,"icon": username[0]},"timestamp": data["timestamp"]}, to="lobby")
-				emit("message", msg.to_dict(), room=room, include_self=False)
-
+					#username = data["user"]["name"]
+					#send({"text": data['text'] ,"user":{"name": username,"icon": username[0]},"timestamp": data["timestamp"]}, to="lobby")
+					msg = send_message(sockio=socketio, sender_name=sender, session_id=s.id, room=room, message=message, include_self=False)
+					s.messages.append(msg)

@@ -109,13 +109,13 @@ for i in $(seq 1 $TEST_USERS); do
     ((test_count++))
     echo "Test $test_count: Listing lobby sessions for user$i"
     response=$(call_api $i "GET" "/lobby/sessions")
-    check_response "List sessions user$i" "$response" "Sessions available to join"
+    check_response "List sessions user$i" "$response" "Game sessions"
 
     # Test: List users
     ((test_count++))
     echo "Test $test_count: Listing users for user$i"
     response=$(call_api $i "GET" "/lobby/users")
-    check_response "List users user$i" "$response" "Users in game"
+    check_response "List users user$i" "$response" "Registered users"
 done
 
 # Additional edge case tests

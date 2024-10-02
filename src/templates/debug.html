@@ -95,6 +95,18 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #666;
         }
+        #directWebSocketSection {
+            margin-top: 20px;
+        }
+        #wsMessages {
+            height: 150px;
+            overflow-y: auto;
+            border: 1px solid #3f3f3f;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #2d2d2d;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -139,6 +151,16 @@
         <button onclick="sendMessage()">Send</button>
     </section>
 
+    <section id="directWebSocketSection">
+        <h2>Direct WebSocket Connection</h2>
+        <input type="text" id="wsUrl" placeholder="Enter WebSocket URL">
+        <input type="text" id="wsRoom" placeholder="Enter room name">
+        <button onclick="connectDirectWebSocket()">Connect</button>
+        <button onclick="disconnectDirectWebSocket()">Disconnect</button>
+        <div id="wsMessages"></div>
+        <input type="text" id="wsInput" placeholder="Type a message...">
+        <button onclick="sendWebSocketMessage()">Send</button>
+    </section>
 
     <script>
         const API_URL = '/api';
@@ -323,6 +345,71 @@
                 chatInput.value = '';
             }
         }
+        
+        let directWebSocket = null;
+    let directWebSocketRoom = null;
+
+    function connectDirectWebSocket() {
+        const wsUrl = document.getElementById('wsUrl').value;
+        const roomInput = document.getElementById('wsRoom').value;
+        
+        if (directWebSocket) {
+            directWebSocket.disconnect();
+        }
+
+        directWebSocket = io(wsUrl, {
+            transports: ['websocket'],
+            withCredentials: true
+        });
+
+        directWebSocketRoom = roomInput;
+
+        directWebSocket.on('connect', () => {
+            console.log('Connected to WebSocket server');
+            document.getElementById('directWebSocketSection').style.display = 'block';
+            directWebSocket.emit("join", {"username": currentUser, "room": directWebSocketRoom});
+            showWSMessage('Connected to WebSocket server');
+        });
+
+        directWebSocket.on('disconnect', () => {
+            document.getElementById('directWebSocketSection').style.display = 'none';
+            showWSMessage('Disconnected from WebSocket server');
+        });
+
+        directWebSocket.on('message', (data) => {
+            console.log(data);
+            if (data.from == currentUser)
+                return;
+            showWSMessage(`${data.from}: ${data.message}`);
+        });
+    }
+
+    function disconnectDirectWebSocket() {
+        if (directWebSocket) {
+            directWebSocket.disconnect();
+            directWebSocket = null;
+            directWebSocketRoom = null;
+            document.getElementById('directWebSocketSection').style.display = 'none';
+        }
+    }
+
+    function sendWebSocketMessage() {
+        const wsInput = document.getElementById('wsInput');
+        const message = wsInput.value;
+        if (message && directWebSocket) {
+            directWebSocket.emit('message', { "message": message, "room": directWebSocketRoom, "from": currentUser });
+            showWSMessage(`You: ${message}`);
+            wsInput.value = '';
+        }
+    }
+
+    function showWSMessage(message) {
+        const wsMessagesDiv = document.getElementById('wsMessages');
+        const messageElement = document.createElement('div');
+        messageElement.textContent = message;
+        wsMessagesDiv.appendChild(messageElement);
+        wsMessagesDiv.scrollTop = wsMessagesDiv.scrollHeight;
+    }
     </script>
 </body>
 </html>

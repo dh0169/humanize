@@ -3,8 +3,8 @@ import enum
 import base64
 import json
 import requests
-from flask_socketio import SocketIO
 from src.message import Message
+
 
 class Session:
     class State(enum.Enum):
