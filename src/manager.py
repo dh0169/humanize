@@ -1,5 +1,5 @@
 import random, enum
-from src.utils import send_message_with_delay, send_message
+from src.utils import send_message_with_delay, send_server_message_with_delay
 from src.user import User
 from src.models import SessionModel, SessionState, UserModel, UserState, MessageModel, db_session
 from flask_socketio import SocketIO
@@ -64,15 +64,14 @@ class SessionManager():
             host.state = UserState.ACTIVE
             new_pending_session.players.append(host)
             new_pending_session.set_host(host.id)
-            host.session_id = new_pending_session.id
-            
+            host.session_id = new_pending_session.id            
 
-        return True, f"New game session created, {room}."
+            return new_pending_session.room, f"New game session created, {room}."
 
 
     def join_session(self, user_id, room="", random_room=False, sock: SocketIO = None):
         if not user_id:
-            return False, "Error, user_id is None."
+            return None, "Error, user_id is None."
         
         try:
             with db_session() as db:                
@@ -81,12 +80,12 @@ class SessionManager():
 
 
                 if current_user.state == UserState.ACTIVE:
-                    return False, f"user '{current_user.username}' is already in a session."
+                    return None, f"user '{current_user.username}' is already in a session."
 
                 if random_room:
                     pending_sessions = db.query(SessionModel).filter_by(state=SessionState.PENDING).all()
                     if len(pending_sessions) == 0:
-                        return False, "No sessions available."
+                        return  None, "No sessions available."
                     current_session = random.choice(pending_sessions)
 
                 else:
@@ -102,7 +101,7 @@ class SessionManager():
                         current_user.session_id = current_session.id
                         current_user.state = UserState.ACTIVE
                     elif current_session.state != SessionState.PENDING:
-                        return False, "Cannot join an ACTIVE session."
+                        return None, "Cannot join an ACTIVE session."
                     
                     if current_session.get_user_count() == current_session.max_players_allowed:
                         current_session.start_game()
@@ -112,11 +111,10 @@ class SessionManager():
                             sock.start_background_task(self.handle_session, sock, current_session.id, current_session.room)
 
                     db.add(current_session)
-                    if random_room:
-                        return True, f"{current_user.username} has joined {current_session.room}!", current_session.room
-                    return True, f"{current_user.username} has joined {current_session.room}!"
+                    return current_session.room, f"{current_user.username} has joined {current_session.room}!"
+                
                 else:
-                    return False, f"{room} is full!"
+                    return None, f"{room} is full!"
 
 
         except NoResultFound:

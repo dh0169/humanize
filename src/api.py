@@ -29,16 +29,16 @@ def lobby():
     user_id = session['user']
 
     if request.method == "POST":
+        msg = ""
+        room_joined = None
+        room = request.json.get("room")
+
         if request.json.get("type") == "join":
             # Handle join request
 
-            result = False
-            msg = ""
-            room = ""
             if request.json.get("random"):
-                result, msg, room  = session_manager.join_session(user_id=user_id, random_room=True, sock=socketio)
+                room_joined, msg  = session_manager.join_session(user_id=user_id, random_room=True, sock=socketio)
             else:
-                room = request.json.get("room")
                 if not room or type(room) is not str:
                     return (
                     jsonify(
@@ -47,13 +47,13 @@ def lobby():
                     ),
                     HTTPStatus.BAD_REQUEST,
                 )
-                result, msg= session_manager.join_session(user_id=user_id, room=room, sock=socketio)
+                room_joined, msg = session_manager.join_session(user_id=user_id, room=room, sock=socketio)
                 
-            if result:
+            if room_joined:
                 return (
                     jsonify(
                         message=msg,
-                        data={"room": room},
+                        data={"room": room_joined},
                         did_succeed=True,
                         ws=ws_url
 
@@ -64,14 +64,12 @@ def lobby():
                 return (
                     jsonify(
                         message=msg,
-                        data={"room": room},
                         did_succeed=False
                     ),
                     HTTPStatus.OK,
                 )
         elif request.json.get("type") == "host":
             # Handle host request
-            room = request.json.get("room")
             if not room:
                 return (
                     jsonify(
@@ -80,12 +78,12 @@ def lobby():
                     ),
                     HTTPStatus.BAD_REQUEST,
                 )
-            result, msg = session_manager.create_session(host_id=user_id, room=room, sock=socketio)
-            if(result):
+            room_joined, msg = session_manager.create_session(host_id=user_id, room=room, sock=socketio)
+            if(room_joined):
                 return (
                     jsonify(
                         message=msg,
-                        data={"room": room},
+                        data={"room": room_joined},
                         did_succeed=True,
                         ws=ws_url
                     ),

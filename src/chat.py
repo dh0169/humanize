@@ -2,7 +2,7 @@ from flask import Blueprint, session
 from flask_socketio import emit, join_room
 from src import socketio, session_manager
 from src.models import UserModel, UserState, MessageModel, SessionModel, db_session
-from src.utils import send_message_with_delay, send_message
+from src.utils import send_message_with_delay, send_message, send_server_message_with_delay
 from datetime import datetime
 
 bp = Blueprint('chat', __name__, url_prefix="/chat")
@@ -57,7 +57,7 @@ def handle_join(join_req):
 		tmp_user = db.query(UserModel).filter_by(id=user_id).one_or_none()
 		print(tmp_user)
 		if not tmp_user or not tmp_user.session_id:
-			send_message(sockio=socketio, sender_name="Server", session_id=None, room=None, message="Please join a valid session")
+			send_server_message_with_delay(sockio=socketio, session_id=None, room=None, message="Please join a valid session", delay=0)
 			return
 		tmp_session = db.query(SessionModel).filter_by(id=tmp_user.session_id).one_or_none()
 
@@ -91,3 +91,4 @@ def handle_msg(data):
 					#send({"text": data['text'] ,"user":{"name": username,"icon": username[0]},"timestamp": data["timestamp"]}, to="lobby")
 					msg = send_message(sockio=socketio, sender_name=sender, session_id=s.id, room=room, message=message, include_self=False)
 					s.messages.append(msg)
+					print([msg.to_dict() for msg in s.messages])
