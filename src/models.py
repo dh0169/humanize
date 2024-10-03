@@ -9,6 +9,17 @@ from src.config import DATABASE_URI
 Base = declarative_base()
 
 
+# How to use database:
+# 
+#       from src.models import UserModel, SessionModel, UserState, SessionState, db_session       
+#
+#       with db_session() as db:
+#           tmp_sessions = db.query(SessionModel).all() # returns all session objects
+#           tmp_user = db.query(UserModel).filter_by(id=user_id).one_or_none() # returns the object or None
+#           do stuff with the user object here, everything needs to finish here. Cant pass user object around. only the id's
+#
+
+
 def get_db():
     engine = create_engine(DATABASE_URI)
     SessionFactory = sessionmaker(bind=engine)

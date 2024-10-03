@@ -37,7 +37,8 @@ def handle_disconnect():
 					print(current_session)
 					if current_session:
 						session_manager.disconnect_player(tmp_user.id)
-						send_message(sockio=socketio, sender_name="Server", session_id=None, room=current_session.room, message=f'{tmp_user.username} has disconnected!')
+						disconnect_msg = send_message(sockio=socketio, sender_name="Server", session_id=None, room=current_session.room, message=f'{tmp_user.username} has disconnected!')
+						current_session.messages.append(disconnect_msg)
 				print(f"User {tmp_user.username} has disconnected!")
 
 	
@@ -66,7 +67,10 @@ def handle_join(join_req):
 		#Tie the id to the session object, Set the cookie to the id
 		join_room(room)
 		print(f'Join: {username} has entered {room}!')
-		send_message(sockio=socketio, sender_name="Server", session_id=None, room=room, message=f'{tmp_user.username} has entered the chat!')
+		tmp_msg = send_message(sockio=socketio, sender_name="Server", session_id=None, room=room, message=f'{tmp_user.username} has entered the chat!')
+		
+		#Add message to database
+		tmp_session.messages.append(tmp_msg)
 
 # On new message
 @socketio.on('message', namespace='/chat')
@@ -87,8 +91,6 @@ def handle_msg(data):
 					message = data["message"]
 
 
-					#username = data["user"]["name"]
-					#send({"text": data['text'] ,"user":{"name": username,"icon": username[0]},"timestamp": data["timestamp"]}, to="lobby")
 					msg = send_message(sockio=socketio, sender_name=sender, session_id=s.id, room=room, message=message, include_self=False)
 					s.messages.append(msg)
 					print([msg.to_dict() for msg in s.messages])

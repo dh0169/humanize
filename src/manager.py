@@ -1,6 +1,5 @@
 import random, enum
 from src.utils import send_message_with_delay, send_server_message_with_delay
-from src.user import User
 from src.models import SessionModel, SessionState, UserModel, UserState, MessageModel, db_session
 from flask_socketio import SocketIO
 from sqlalchemy.exc import SQLAlchemyError, NoResultFound

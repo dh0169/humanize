@@ -1,15 +1,10 @@
 import os
-
-from flask import Blueprint, session, request, jsonify, Response
-from http import HTTPStatus
-
 from src import session_manager, socketio
-from src.user import User
-from src.session import Session
 from src.utils import is_registered, handle_db_errors
 from src.models import db_session, UserModel, SessionModel, SessionState
-
+from flask import Blueprint, session, request, jsonify, Response
 from sqlalchemy import select
+from http import HTTPStatus
 
 bp = Blueprint("api", __name__, url_prefix="/api")
 ws_url = os.getenv("WS_URL")
