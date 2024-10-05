@@ -1,12 +1,12 @@
 from functools import wraps
-from flask import session, jsonify, current_app
+from flask import session, jsonify
 from flask_socketio import SocketIO
 from sqlalchemy.exc import NoResultFound, SQLAlchemyError
 from http import HTTPStatus
-from src.models import db_session, UserModel, MessageModel
+from src.models import db_session, UserModel, MessageModel, SessionModel
+
 
 from datetime import datetime
-
 
 
 def is_registered(f):
@@ -54,4 +54,6 @@ def send_message_with_delay(sockio : SocketIO, sender_name : str, session_id : i
 
 def send_server_message_with_delay(sockio : SocketIO, session_id : int, room : str, message : str, delay : int = 1):
     return send_message_with_delay(sockio=sockio, sender_name="Server", session_id=session_id, room=room, message=message, include_self=True, delay=delay)
+
+
 

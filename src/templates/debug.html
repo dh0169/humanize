@@ -297,7 +297,9 @@
 
             socket = io(socketUrl, {
                 transports: ['websocket'],
-                withCredentials: true
+                withCredentials: true,
+                // secure: true,
+                // rejectUnauthorized: false
             });
 
             roomName = currentRoom
@@ -359,7 +361,9 @@
 
         directWebSocket = io(wsUrl, {
             transports: ['websocket'],
-            withCredentials: true
+            withCredentials: true,
+            // secure: true,
+            // rejectUnauthorized: false
         });
 
         directWebSocketRoom = roomInput;

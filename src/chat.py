@@ -12,7 +12,7 @@ bp = Blueprint('chat', __name__, url_prefix="/chat")
 def is_registered(func):
 	def wrapper(*args, **kwargs):
 		if 'user' not in session:
-			send_message(sockio=socketio, sender_name="Server", session_id=None, message='User is not registered')
+			send_message(sockio=socketio, sender_name="Server", room=None, session_id=None, message='User is not registered')
 			return
 		return func(*args, **kwargs)
 	return wrapper
@@ -56,18 +56,16 @@ def handle_join(join_req):
 	with db_session() as db:
 		user_id = session['user']
 		tmp_user = db.query(UserModel).filter_by(id=user_id).one_or_none()
-		print(tmp_user)
 		if not tmp_user or not tmp_user.session_id:
 			send_server_message_with_delay(sockio=socketio, session_id=None, room=None, message="Please join a valid session", delay=0)
 			return
 		tmp_session = db.query(SessionModel).filter_by(id=tmp_user.session_id).one_or_none()
 
-		print(tmp_session)
 
 		#Tie the id to the session object, Set the cookie to the id
 		join_room(room)
 		print(f'Join: {username} has entered {room}!')
-		tmp_msg = send_message(sockio=socketio, sender_name="Server", session_id=None, room=room, message=f'{tmp_user.username} has entered the chat!')
+		tmp_msg = send_message(sockio=socketio, sender_name="Server", session_id=None, room=room, message=f'user joined session!')
 		
 		#Add message to database
 		tmp_session.messages.append(tmp_msg)

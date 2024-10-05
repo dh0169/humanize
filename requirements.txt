@@ -9,3 +9,4 @@ flask_cors
 requests
 openai
 greenlet
+python-dotenv

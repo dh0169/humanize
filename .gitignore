@@ -1,3 +1,9 @@
+#Humanize specific
+# db for database files
+# sh for bash scripts
+*.db
+*.sh
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

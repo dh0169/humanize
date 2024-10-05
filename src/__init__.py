@@ -1,5 +1,5 @@
 import eventlet
-eventlet.monkey_patch()
+eventlet.monkey_patch(socket=False) # Need this or openAI fails
 
 from flask import Flask
 
@@ -11,7 +11,7 @@ from src.config import FLASK_SECRET_KEY
 
 
 
-socketio = SocketIO()
+socketio = SocketIO(cors_allowed_origins="*")
 session_manager = SessionManager()
 
 def create_app(debug=False):

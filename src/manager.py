@@ -1,9 +1,11 @@
-import random, enum
+import random
+import json
 from src.utils import send_message_with_delay, send_server_message_with_delay
 from src.models import SessionModel, SessionState, UserModel, UserState, MessageModel, db_session
 from flask_socketio import SocketIO
 from sqlalchemy.exc import SQLAlchemyError, NoResultFound
-
+from src.robot import RobotController, RobotType
+from src.config import OPENAI_API_KEY
 from datetime import datetime
 
 
@@ -17,22 +19,37 @@ class SessionManager():
         self.pending_sessions = pending_sessions
         self.active_sessions = active_sessions
 
+
+
     def handle_session(self, socketio : SocketIO, session_id : int, session_room : str):
         print(f"Handling session {session_id}...")
 
         #Generate robot user id here
-        robot_name = "NotABot"
+        with db_session() as db:
+            robot_name = "notabot"
+            robot_user = UserModel(username=robot_name, state=UserState.ACTIVE)
+            robot_user.session_id = session_id
+
+            tmp_session = db.query(SessionModel).filter_by(id=session_id).one_or_none()
+            if tmp_session:
+                tmp_session.players.append(robot_user)
+                #send_server_message_with_delay(sockio=socketio, session_id=session_id, room=session_room, message=f'{robot_user.username} has entered the chat!')
+            else:
+                return
+            db.add(robot_user)
+            db.flush()
+
+            robot_user_id = robot_user.id
 
         #Starting message
-        send_message_with_delay(sockio=socketio, sender_name=robot_name, 
-                                     session_id=session_id, room=session_room, message="Game is starting!")
+        send_server_message_with_delay(sockio=socketio, session_id=session_id, room=session_room, message="Game is starting!")
 
         #Prompt message, 
-        send_message_with_delay(sockio=socketio, sender_name=robot_name, 
-                                     session_id=session_id, room=session_room, message="Some prompt here! Goodluck!")
-        
+        send_server_message_with_delay(sockio=socketio,session_id=session_id, room=session_room, message="Some prompt here! Goodluck!")
+    
         #Main game loop, Basically while the session is ACTIVE, do stuff.
         current_state = self.get_session_status(session_id=session_id)
+        robot = RobotController(RobotType.gpt_4o, robot_name=robot_name)
         while current_state == SessionState.ACTIVE:
             with db_session() as db:
                 current_session = db.query(SessionModel).filter_by(id=session_id).one_or_none()
@@ -42,15 +59,22 @@ class SessionManager():
                     current_session.end_game()
                 current_state = current_session.state
 
-                #send_message and store in database if needed
-                tmp_msg = send_message_with_delay(sockio=socketio, sender_name=robot_name, session_id=session_id, 
-                                            room=session_room, message="MicCheck123", delay=3)
-                current_session.messages.append(tmp_msg)
+                socketio.sleep(random.randint(a=4, b=6))
+
+                try:
+                    ai_response = robot.get_response(session_id=session_id)
+                    if ai_response and ai_response['message']:
+                        send_message_with_delay(sockio=socketio, sender_name=ai_response['from'], session_id=session_id, room=session_room, message=ai_response['message'])
+
+                except Exception as e:
+                    print(e)
+                    continue
+
 
         send_message_with_delay(sockio=socketio, sender_name="Server", session_id=session_id, 
                                             room=session_room, message=f"Gamesession {session_id} has ended...")
 
-    def create_session(self, host_id, room="", sock: SocketIO = None):
+    def create_session(self, host_id, room=""):
         with db_session() as db:
             if db.query(SessionModel).filter_by(room=room).one_or_none():
                 return False, "room already exists, please select a different room name."
@@ -74,7 +98,7 @@ class SessionManager():
         
         try:
             with db_session() as db:                
-                current_user : User = db.query(UserModel).filter_by(id=user_id).one()
+                current_user : UserModel = db.query(UserModel).filter_by(id=user_id).one()
                 current_session : SessionModel = None
 
 

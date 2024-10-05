@@ -125,6 +125,7 @@ class SessionModel(Base):
     room = Column(String(100), unique=True)                               # Unique Room name
     robot = Column(String(20), nullable=True, default=None)               # AI Model Name (i.e gpt-3.5 turbo)
     host_id = Column(Integer, ForeignKey('users.id'), nullable=True)      # User id who is host
+    thread_id = Column(String, nullable=True) 
     state = Column(Enum(SessionState), default=SessionState.PENDING)      # Session state
     max_players_allowed = Column(Integer, default=4)
 
@@ -134,10 +135,11 @@ class SessionModel(Base):
 
 
 
-    def __init__(self, room="", robot=None, host_id=None, state=SessionState.PENDING, max_players_allowed=4, socketio=None):
+    def __init__(self, room="", robot=None, host_id=None, thread_id=None, state=SessionState.PENDING, max_players_allowed=4, socketio=None):
         self.room = room
         self.robot = robot 
         self.host_id = host_id
+        self.thread_id = thread_id
         self.state = state
         self.max_players_allowed = max_players_allowed
 
