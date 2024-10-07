@@ -9,7 +9,7 @@ COPY src/ /var/www/html/humanize/src
 COPY main.py /var/www/html/humanize
 COPY requirements.txt /var/www/html/humanize
 COPY .env /var/www/html/humanize
-COPY generate_selfsigned.sh /var/www/html/humanize
+#COPY generate_selfsigned.sh /var/www/html/humanize
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
