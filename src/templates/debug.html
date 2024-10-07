@@ -70,9 +70,7 @@
             padding: 5px;
             border-radius: 3px;
         }
-        #chatSection {
-            display: none;
-        }
+        
         #chatMessages {
             height: 150px;
             overflow-y: auto;
@@ -306,12 +304,12 @@
             
             socket.on('connect', () => {
                 console.log('Connected to chat server');
-                document.getElementById('chatSection').style.display = 'block';
+                // document.getElementById('chatSection').style.display = 'block';
                 socket.emit("join", {"username" : currentUser, "room" : roomName})
             });
 
             socket.on('disconnect', () => {
-                document.getElementById('chatSection').style.display = 'none';
+                //document.getElementById('chatSection').style.display = 'none';
             });
 
             socket.on('message', (data) => {
@@ -330,7 +328,7 @@
             if (socket) {
                 socket.disconnect();
                 socket = null;
-                document.getElementById('chatSection').style.display = 'none';
+                //document.getElementById('chatSection').style.display = 'none';
             }
         }
 

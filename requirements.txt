@@ -3,6 +3,7 @@ Flask-SocketIO==5.3.4
 python-socketio==5.8.0
 eventlet==0.33.3
 
+flask_httpauth
 sqlalchemy[asyncio]
 flask_session
 flask_cors

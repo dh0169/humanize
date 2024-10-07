@@ -26,7 +26,7 @@ class SessionManager():
 
         #Generate robot user id here
         with db_session() as db:
-            robot_name = "notabot"
+            robot_name = RobotController.simple_ask(ask="Generate a simple cool username like 'notabot' or 'smoot'")
             robot_user = UserModel(username=robot_name, state=UserState.ACTIVE)
             robot_user.session_id = session_id
 

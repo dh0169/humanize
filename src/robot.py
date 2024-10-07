@@ -67,6 +67,30 @@ class RobotController:
             
     def get_robot_name(self, session_id : int):
         return self.robot_name if self.robot_name else "bot_sess_"+session_id
+    
+    @classmethod
+    def simple_ask(cls, ask : str, robot_type : RobotType = RobotType.gpt3_5):
+        messages = []
+
+      
+        messages.append({
+            "role": "system",
+            "content": ask.strip()
+        })
+
+        client = openai.OpenAI(api_key= OPENAI_API_KEY)  # Assuming you have set up the OpenAI client
+
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=messages
+        )
+
+        try:
+            ai_response = response.choices[0].message.content
+            print(ai_response)
+            return ai_response
+        except:
+            return None
 
 
     def get_response(self, session_id: int) -> str:
@@ -88,7 +112,7 @@ class RobotController:
                 return None
              
             print(last_item)
-            for msg in session.messages:
+            for msg in session.messages[len(session.messages) // 2 :]:
                 messages.append({
                     "role": "user" if msg.sender != self.type.value else "assistant",
                     "content": json.dumps(msg.to_dict())

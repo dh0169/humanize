@@ -115,7 +115,7 @@ class UserModel(Base):
 
 class SessionState(enum.Enum):
     PENDING = 'PENDING'
-    ACTIVE = 'ACTIVE'
+    ACTIVE = 'ACTIVE'   
     INACTIVE = 'INACTIVE'
 
 class SessionModel(Base):
