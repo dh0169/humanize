@@ -24,6 +24,8 @@ EXPOSE 8000
 
 # Define environment variable
 # ENV SECRET_KEY secret1
+ ENV FLASK_USER human
+ ENV FLASK_PW 76T4uSWKdZRwAhUAuNbn
 
 # Run app.py when the container launches
 CMD ["python", "main.py"]

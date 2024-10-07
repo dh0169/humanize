@@ -2,168 +2,133 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Humanize - AI Among Us</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #1e1e1e;
+            background-color: #121212;
             color: #e0e0e0;
-        }
-        h1, h2, h3 {
-            color: #bb86fc;
-        }
-        .container {
-            margin-top: 20px;
-        }
-        .tabs {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-        .tablink {
-            background-color: #bb86fc;
-            color: #1e1e1e;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 3px;
-            cursor: pointer;
-            margin: 0 5px;
-            transition: background-color 0.3s;
-        }
-        .tablink:hover {
-            background-color: #a370d8;
-        }
-        .tabcontent {
-            margin-bottom: 20px;
-            padding: 10px;
-            border: 1px solid #3f3f3f;
-            background-color: #2d2d2d;
-            border-radius: 5px;
-            display: none;
-        }
-        .tabcontent.active {
-            display: block;
-        }
-        button {
-            margin-top: 10px;
-            margin-right: 5px;
-            background-color: #bb86fc;
-            color: #1e1e1e;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #a370d8;
-        }
-        .debug-button {
-            display: block;
-            margin: 20px auto;
-            text-align: center;
-        }
-        ul {
-            list-style-type: none;
+            font-family: sans-serif;
+            margin: 0;
             padding: 0;
+            display: flex;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
         }
-        ul li {
-            margin-bottom: 5px;
-            background-color: #3f3f3f;
+
+        .container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2em;
+            font-weight: normal;
+            margin-bottom: 30px;
+        }
+
+        .code-window {
+            background-color: #1e1e1e;
+            color: #c5c5c5;
+            padding: 20px;
+            border-radius: 8px;
+            display: inline-block;
+            text-align: left;
+            margin-top: 20px;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            font-family: monospace;
+        }
+
+        .code-header {
+            display: flex;
+            gap: 8px;
+            position: absolute;
+            top: 12px;
+            left: 16px;
+        }
+
+        .code-header .circle {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .code-header .red {
+            background-color: #ff5f56;
+        }
+
+        .code-header .yellow {
+            background-color: #ffbd2e;
+        }
+
+        .code-header .green {
+            background-color: #27c93f;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            background: none;
+            border: none;
+            color: #c5c5c5;
+            cursor: pointer;
+            font-size: 0.9em;
             padding: 5px;
-            border-radius: 3px;
+        }
+
+        .copy-button:hover {
+            color: #ffffff;
+        }
+
+        .code-content {
+            margin-top: 40px; /* Adjust to create space for header */
+        }
+
+        pre {
+            margin: 0;
+            font-family: monospace;
+            font-size: 1em;
+        }
+
+        .footer {
+            margin-top: 50px;
+            font-size: 0.8em;
+            color: #757575;
         }
     </style>
 </head>
 <body>
-    <h1>Humanize - AI Among Us</h1>
     <div class="container">
-        <div class="tabs">
-            <button class="tablink active" onclick="openTab(event, 'Overview')">Overview</button>
-            <button class="tablink" onclick="openTab(event, 'Features')">Features</button>
-            <button class="tablink" onclick="openTab(event, 'TechStack')">Tech Stack</button>
-            <button class="tablink" onclick="openTab(event, 'GettingStarted')">Getting Started</button>
+        <h1>Humanize - AI Among Us</h1>
+        <div class="code-window">
+            <div class="code-header">
+                <div class="circle red"></div>
+                <div class="circle yellow"></div>
+                <div class="circle green"></div>
+            </div>
+            <button class="copy-button" onclick="copyToClipboard()">Copy</button>
+            <div class="code-content">
+                <pre><code id="code-text">git clone https://github.com/dh0169/humanize</code></pre>
+            </div>
         </div>
-
-        <div id="Overview" class="tabcontent active">
-            <h2>Overview</h2>
-            <p><strong>Humanize - AI Among Us</strong> is a fun and engaging multiplayer game where 4-6 players are grouped in an online chat. One of the players is an AI! The goal is to work together to identify the AI before time runs out.</p>
-        </div>
-
-        <div id="Features" class="tabcontent">
-            <h2>Features</h2>
-            <ul>
-                <li>4-6 player online multiplayer game</li>
-                <li>AI-powered gameplay</li>
-                <li>Interactive communication and strategy</li>
-                <li>Fun & suspenseful experience</li>
-            </ul>
-        </div>
-
-        <div id="TechStack" class="tabcontent">
-            <h2>Tech Stack</h2>
-            <ul>
-                <li>Python 3.10+</li>
-                <li>LLM integration</li>
-                <li>Pip & Virtual Environments</li>
-            </ul>
-        </div>
-
-        <div id="GettingStarted" class="tabcontent">
-            <h2>Getting Started</h2>
-            <h3>Prerequisites</h3>
-            <ul>
-                <li>Python 3.10+</li>
-                <li>pip</li>
-                <li>Virtualenv</li>
-            </ul>
-            <h3>Installation</h3>
-            <ol>
-                <li>Clone the repository:</li>
-                <pre><code>git clone https://github.com/your-username/humanize.git</code></pre>
-                <li>Create a virtual environment:</li>
-                <pre><code>python3 -m venv venv</code></pre>
-                <li>Activate the virtual environment:</li>
-                <pre><code>source venv/bin/activate  # macOS/Linux</code></pre>
-                <pre><code>.\venv\Scripts\activate  # Windows</code></pre>
-                <li>Install dependencies:</li>
-                <pre><code>pip install -r requirements.txt</code></pre>
-            </ol>
-            <h3>Running the Game</h3>
-            <pre><code>python3 main.py</code></pre>
-        </div>
-        
-        <div class="debug-button">
-            <a href="/debug">
-                <button>Go to Debug Page</button>
-            </a>
-        </div>
+        <div class="footer">© 2024 Humanize.live. All rights reserved.</div>
     </div>
+
     <script>
-        function openTab(evt, tabName) {
-            var i, tabcontent, tablinks;
-
-            tabcontent = document.getElementsByClassName("tabcontent");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].classList.remove("active");
-            }
-
-            tablinks = document.getElementsByClassName("tablink");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].classList.remove("active");
-            }
-
-            document.getElementById(tabName).classList.add("active");
-            evt.currentTarget.classList.add("active");
+        function copyToClipboard() {
+            var codeText = document.getElementById("code-text").innerText;
+            navigator.clipboard.writeText(codeText).then(function() {
+                var copyButton = document.querySelector(".copy-button");
+                copyButton.textContent = "Copied!";
+                setTimeout(function() {
+                    copyButton.textContent = "Copy";
+                }, 2000);
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+            });
         }
-
-        // Set the default tab to open
-        document.addEventListener("DOMContentLoaded", function() {
-            document.querySelector(".tablink.active").click();
-        });
     </script>
 </body>
 </html>
