@@ -1,14 +1,12 @@
 import os
-from flask import url_for
 from src import session_manager, socketio
 from src.utils import is_registered, handle_db_errors
 from src.models import db_session, UserModel, SessionModel, SessionState
-from flask import Blueprint, session, request, jsonify, Response
-from sqlalchemy import select
+from flask import Blueprint, session, request, jsonify
+from src.config import WS_URL
 from http import HTTPStatus
 
 bp = Blueprint("api", __name__, url_prefix="/api", )
-ws_url = "/chat" #os.getenv("WS_URL")
 MAX_USERNAME_SIZE = 30
 
 @bp.route("/")
@@ -26,7 +24,7 @@ def lobby():
         msg = ""
         room_joined = None
         room = request.json.get("room")
-
+        
         if request.json.get("type") == "join":
             # Handle join request
 
@@ -39,7 +37,7 @@ def lobby():
                         did_succeed=False,
                         message=f"room cannot be empty or null",
                     ),
-                    HTTPStatus.BAD_REQUEST,
+                    HTTPStatus.OK,
                 )
                 room_joined, msg = session_manager.join_session(user_id=user_id, room=room, sock=socketio)
                 
@@ -49,7 +47,7 @@ def lobby():
                         message=msg,
                         data={"room": room_joined},
                         did_succeed=True,
-                        ws=ws_url
+                        ws=WS_URL
 
                     ),
                     HTTPStatus.OK,
@@ -72,14 +70,14 @@ def lobby():
                     ),
                     HTTPStatus.BAD_REQUEST,
                 )
-            room_joined, msg = session_manager.create_session(host_id=user_id, room=room)
+            room_joined, msg = session_manager.create_session(host_id=user_id, room=room, sock=socketio)
             if(room_joined):
                 return (
                     jsonify(
                         message=msg,
                         data={"room": room_joined},
                         did_succeed=True,
-                        ws=ws_url
+                        ws=WS_URL
                     ),
                     HTTPStatus.OK,
                 )

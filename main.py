@@ -16,7 +16,7 @@ if __name__ == '__main__':
     PORT = os.environ.get("HUMANIZE_PORT")
 
     if not HOST:
-        HOST = "0.0.0.0"
+        HOST = "127.0.0.1"
 
     if not PORT:
         PORT = 5000

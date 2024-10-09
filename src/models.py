@@ -2,7 +2,7 @@ import enum, random
 
 from datetime import datetime
 from contextlib import contextmanager
-from sqlalchemy import Column, Integer, String, Enum, ForeignKey, Table, DateTime, create_engine 
+from sqlalchemy import Column, Integer, String, Enum, ForeignKey, Table, DateTime, JSON, create_engine 
 from sqlalchemy.orm import declarative_base, sessionmaker, scoped_session, relationship
 
 from src.config import DATABASE_URI
@@ -18,6 +18,15 @@ Base = declarative_base()
 #           tmp_user = db.query(UserModel).filter_by(id=user_id).one_or_none() # returns the object or None
 #           do stuff with the user object here, everything needs to finish here. Cant pass user object around. only the id's
 #
+
+
+def delete_by_id(id, model, delay = 0, sock = None):
+    with db_session() as db:
+        robot_user = db.query(model).filter_by(id=id).one_or_none()
+        if robot_user:
+            if sock:
+                sock.sleep(delay)
+            db.delete(robot_user)
 
 
 def get_db():
@@ -46,6 +55,14 @@ player_sessions = Table(
     Column('session_id', Integer, ForeignKey('sessions.id'), primary_key=True),
     Column('user_id', Integer, ForeignKey('users.id'), primary_key=True)
 )
+
+session_votes = Table(
+    'session_votes', Base.metadata,
+    Column('session_id', Integer, ForeignKey('sessions.id'), primary_key=True),
+    Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
+    Column('user_voted_per_round', JSON, nullable=True) # user_id voted off user_voted
+)
+
 
 
 class MessageModel(Base):
@@ -90,6 +107,7 @@ class UserModel(Base):
     username = Column(String(30), nullable=False)
     session_id = Column(Integer, ForeignKey('sessions.id'))
     state = Column(Enum(UserState), default=UserState.WAITING, nullable=False)
+
     
     def __init__(self, username: str, state: UserState = UserState.WAITING):
         self.username = username
@@ -125,13 +143,13 @@ class SessionModel(Base):
     room = Column(String(100), unique=True)                               # Unique Room name
     robot = Column(String(20), nullable=True, default=None)               # AI Model Name (i.e gpt-3.5 turbo)
     host_id = Column(Integer, ForeignKey('users.id'), nullable=True)      # User id who is host
-    thread_id = Column(String, nullable=True) 
     state = Column(Enum(SessionState), default=SessionState.PENDING)      # Session state
     max_players_allowed = Column(Integer, default=4)
 
 
     players = relationship("UserModel", secondary=player_sessions)
     messages = relationship("MessageModel", backref="session", cascade="all, delete-orphan")
+    votes = relationship("UserModel", secondary=session_votes)
 
 
 

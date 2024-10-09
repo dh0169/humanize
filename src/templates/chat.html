@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+
+    <title>Chat Room - Humanize</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            width: 80%;
+            max-width: 800px;
+            height: 60%;
+        }
+
+        .session-container {
+            text-align: center;
+            display: none;
+            padding: 20px;
+            width: 20%;
+            max-width: 800px;
+            height: 60%;
+            
+        }
+
+        .session-container.show {
+            opacity: 1;
+            display: block;
+            overflow: hidden;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 2em;
+            font-weight: normal;
+            margin-bottom: 30px;
+        }
+
+        /* Chat window initially hidden */
+        .chat-window {
+            background-color: #1e1e1e;
+            color: #c5c5c5;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: left;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            font-family: monospace;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            display: none;
+        }
+
+        /* Chat window becomes visible */
+        .chat-window.show {
+            opacity: 1;
+            display: block;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .code-header {
+            display: flex;
+            gap: 8px;
+            position: absolute;
+            top: 12px;
+            left: 16px;
+        }
+
+        .code-header .circle {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .code-header .red {
+            background-color: #ff5f56;
+        }
+
+        .code-header .yellow {
+            background-color: #ffbd2e;
+        }
+
+        .code-header .green {
+            background-color: #27c93f;
+        }
+
+        .message-input {
+            display: flex;
+            margin-top: 10px;
+        }
+
+        .message-input input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1em;
+            background-color: #2b2b2b;
+            color: #e0e0e0;
+        }
+
+        .message-input button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            background-color: #bb86fc;
+            color: #121212;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        .message-input button:hover {
+            background-color: #9b6efc;
+        }
+        
+        .voting-info button {
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 1.25rem;
+            border: none;
+            border-radius: 10px;
+            background-color: #bb86fc;
+            color: #121212;
+            font-size: 1em;
+            cursor: pointer;
+            width: 10rem;
+        }
+
+        .voting-info button:hover {
+            background-color: #9b6efc;
+        }
+
+        .message {
+            margin-bottom: 10px;
+        }
+
+        .messages {
+            margin-top: 40px;
+            position: absolute;
+            top: 0;
+            bottom: .5rem;
+            left: 0.5rem;
+            right: -17px;
+            overflow-y: scroll;
+        }
+
+        .message .username {
+            font-weight: bold;
+            color: #bb86fc;
+        }
+
+        .message .timestamp {
+            font-size: 0.8em;
+            color: #757575;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 0.8em;
+            color: #757575;
+        }
+
+        /* Registration form */
+        .register-form {
+            height: 70%;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center input and button horizontally */
+            justify-content: center;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .register-form.hide {
+            opacity: 0;
+            display: none;
+        }
+
+        .register-form input {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: none;
+            width: 25%;
+            font-size: 1em;
+            background-color: #2b2b2b;
+            color: #e0e0e0;
+        }
+
+        .register-form button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            background-color: #bb86fc;
+            color: #121212;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: .75rem;
+        }
+
+        .register-form button:hover {
+            background-color: #9b6efc;
+        }
+
+                /* Session info element */
+        .session-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background-color: #1e1e1e;
+            color: #c5c5c5;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            font-family: monospace;
+            font-size: 1em;
+            height: 150px;
+        }
+
+        .voting-info {
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            background-color: #1e1e1e;
+            color: #c5c5c5;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            font-family: monospace;
+            font-size: 1em;
+            height: 200px;
+            transition: display 1s ease-in-out;
+        }
+
+        .voting-info.show {
+            display: flex;
+        }
+
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .info-item strong {
+            color: #bb86fc;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        #sessionInfo span {
+            color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if username %}
+            <h1 id="currentRoom" style="display: block;">Humanize</h1>
+        {% else %}
+            <h1 id="currentRoom" style="display: none;">Humanize</h1>
+        {% endif %}
+
+        <!-- Registration form -->
+        {% if username %}
+        <div class="register-form hide" id="registerForm">
+        {% else %}
+        <div class="register-form" id="registerForm">
+            <h1>Humanize</h1>
+
+        {% endif %}
+
+            {% if placeHolders %}
+                <input id="usernameInput" type="text" placeholder="{{ placeHolders.username }}" required />
+            {% else %}
+                <input id="usernameInput" type="text" placeholder="Enter your username" required />
+            {% endif %}
+            
+            
+            <button id="registerButton">Register</button>
+        </div>
+
+        {% if username %}
+        <div class="chat-window show" id="chatWindow" >
+        {% else %}
+        <div class="chat-window" id="chatWindow" >
+        {% endif %}
+        <!-- Chat window, initially hidden -->
+            <div class="code-header">
+                <div class="circle red"></div>
+                <div class="circle yellow"></div>
+                <div class="circle green"></div>
+            </div>
+            <div id="messages" class="messages" style="margin-top: 40px;"></div>
+        </div>
+
+   
+
+        <!-- Message input, inside chat window -->
+        {% if username %}
+        <div class="message-input" id="messageInputWrapper" style="display:flex;">
+        {% else %}
+        <div class="message-input" id="messageInputWrapper" style="display:none;">
+        {% endif %}
+            <input id="messageInput" type="text" placeholder="Type your message here..." autocomplete="off" />
+            <button id="sendButton">Send</button>
+            <button id="JoinButton">Join</button>
+        </div>
+
+        <div class="footer">© 2024 Humanize.live. All rights reserved.</div>
+    </div>
+
+    {% if username %}
+    <div class="session-container show" id="sessionContainer" >
+    {% else %}
+    <div class="session-container" id="sessionContainer" >
+    {% endif %}
+
+             <!-- Session info element -->
+             <div class="session-info" id="sessionInfo">
+                <div class="info-item">
+                    <strong>Username:</strong>
+                    <span id="sessionUsername">Guest</span>
+                </div>
+                <div class="info-item">
+                    <strong>Round:</strong>
+                    <span id="roundCounter"></span>
+                </div>
+                <div class="info-item">
+                    <strong>Timer:</strong>
+                    <span id="timer"></span>
+                </div>
+            </div>
+            <!-- Session info element -->
+
+            <div class="voting-info" id="voting-window">
+                <div class="info-item" id="info-item">
+                    <strong>The Possible 🤖's</strong>
+                </div>
+            </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js" integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H" crossorigin="anonymous"></script>
+
+    <script>
+        var socket = null;
+        var username = null;
+        var room = null;
+        var round = null;
+
+        const API_URL = '/api';
+        
+        
+        {% if username %}
+            username = '{{username}}';
+
+            if (socket == null){
+                {% if currentRoom %}
+                    setupSocketConnection("{{ ws_url }}", "{{ currentRoom }}");
+                {% else %}
+                    addMessage("Server", "Not in a session. Press Join button.");
+                {% endif %}
+            }
+
+        {% endif %}
+
+
+        function startCountdown(durationInSeconds) {
+                let remainingTime = durationInSeconds;
+
+                // Function to format the time as MM:SS
+                function formatTime(seconds) {
+                    const minutes = Math.floor(seconds / 60);
+                    const remainingSeconds = seconds % 60;
+                    return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+                }
+
+                // Function to update the timer every second
+                const countdownInterval = setInterval(function() {
+                    // Update the timer element with formatted time
+                    document.getElementById('timer').textContent = formatTime(remainingTime);
+
+                    if (remainingTime > 0) {
+                        remainingTime--;  // Decrease remaining time by 1 second
+                    } else {
+                        clearInterval(countdownInterval);  // Stop the countdown when time reaches zero
+                        // Optionally, add additional logic when the countdown finishes
+                        document.getElementById('timer').textContent = "00:00";  // Ensure it's exactly zero
+                        console.log("Countdown finished");
+                    }
+                }, 1000);  // Run every second (1000 ms)
+            }
+        
+        document.getElementById('JoinButton').addEventListener('click', function(e) { 
+            if(socket == null){
+                joinOrHostLobby(username);
+            }else{
+                addMessage("Server", "Already in a session!");
+            }
+        });
+
+        document.getElementById('registerButton').addEventListener('click', handleRegistration);
+
+        function setUsernameLabel(username){
+            su_el = document.getElementById("sessionUsername")
+            if (username){
+                su_el.textContent = username
+            }
+        }
+
+
+        function setRoundLabel(round){
+            rc_el = document.getElementById("roundCounter")
+            if (round){
+                rc_el.textContent = round
+            }
+        }
+
+        setUsernameLabel(username)
+
+
+        function handleRegistration() {
+            username = document.getElementById('usernameInput').value.trim();
+            if (username) {
+                registerUser(username)
+                    .then(() => showChatWindow())
+                    .catch(error => logError('Registration failed', error));
+            }
+        }
+
+        function registerUser(username) {
+            return axios.post(`${API_URL}/register`, { username })
+                .then(response => {
+                    if (!response.data.did_succeed) {
+                        throw new Error(`Registration failed: ${response.data.message}`);
+                    }
+                    setUsernameLabel(username)                
+                    return joinOrHostLobby(username);
+                })
+                .catch(error => {
+                    logError('Registration Error', error);
+                    throw error; // Re-throw to be caught later
+                });
+        }
+        
+        function setRoom(room){
+            el = document.getElementById('currentRoom')
+            el.textContent = room
+            el.style.display = "block"
+        }
+
+        function joinOrHostLobby(username) {
+            return axios.post(`${API_URL}/lobby`, { "type": "join", "username": username, "random": true })
+                .then(response => {
+                    if (response.data.did_succeed) {
+                        setRoom("Humanize")
+                        return setupSocketConnection(response.data.ws, response.data.data.room);
+                    } else {
+                        return hostRoom(username);
+                    }
+                })
+                .catch(error => {
+                    logError('Lobby Join Error', error);
+                    throw error;
+                });
+        }
+        function joinRoom(username, room) {
+            return axios.post(`${API_URL}/lobby`, { "type": "join", "username": username, "room": room })
+                .then(response => {
+                    if (response.data.did_succeed) {
+                        setRoom("Humanize")
+                        return setupSocketConnection(response.data.ws, response.data.data.room);
+                    } else {
+                        console.log(response.data)
+                    }
+                })
+                .catch(error => {
+                    logError('Lobby Join Error', error);
+                    throw error;
+                });
+        }
+
+        function hostRoom(username) {
+            const roomName = generateRandomString(15);
+            return axios.post(`${API_URL}/lobby`, { "type": "host", "username": username, "room": roomName })
+                .then(response => {
+                    if (response.data.did_succeed) {
+                        setRoom("Humanize")
+                        //populate messages?
+                        return setupSocketConnection(response.data.ws, response.data.data.room);
+                    } else {
+                        throw new Error('Failed to host room');
+                    }
+                })
+                .catch(error => {
+                    logError('Room Hosting Error', error);
+                    throw error;
+                });
+        }
+
+        function setupSocketConnection(wsUrl, roomId) {
+            socket = io(wsUrl, {
+                transports: ['websocket'],
+                withCredentials: true,
+                secure : true
+            });
+    
+            room = roomId;
+            socket.emit("join", { "username" : username, "room" : room });
+
+
+            socket.on('session_start', function(data) {
+                console.log(data)
+            });
+
+
+            socket.on('session_end', function(data) {                
+                    socket = null;
+                    room = null;
+                    setRoundLabel(" ")
+                    console.log("Round ended!")                
+            });
+
+            socket.on('round_start', function(data) {
+                if(data){
+                    if ((round != null && data.round > round) ){
+                        setRoundLabel(data.round);
+                    }else if(round == null){
+                        setRoundLabel(data.round);
+                    }
+
+                    // Get this from the data obj
+                    startCountdown(15);
+                }
+            });
+
+
+            socket.on('round_end', function(data) {
+                if(data){
+                    console.log("Round", data.round, "ended!")
+                }
+            });
+
+            socket.on('begin_vote', function(data) {
+                if(data){
+                    showVotingWindow()
+                    console.log("Voting start for round ", data.round)
+                    ii = document.getElementById("info-item")
+                    //for user in data.users append a <button >Person1</button> to id=voting-window
+                    //Create button -> set textContent to username, set ValueToSubmit is user_id, and setClickhandler is the emit function
+                    data.users.forEach(user => {
+                        const button = document.createElement('button');
+                        if (user.username != username){
+                            button.textContent = user.username
+                            button.addEventListener("click", function(){
+                                socket.emit('submit_vote', {"from" : username, "voted_id" : user.id, "round" : data.round})
+                            });
+                            ii.appendChild(button)
+                            console.log(button);
+                        }
+                    });
+
+                    // This will be in the button handler for the buttons above
+                }
+            });
+
+            socket.on('stop_vote', function(data) {
+                if(data){
+                    console.log("Voting stop for round ", data.round)
+                    hideVotingWindow()
+                }
+            });
+
+            socket.on('join', function(data) {
+                if (data.room) {
+                    document.getElementById('chatWindow').textContent = data.room;
+                }
+            });
+
+            socket.on('message', function(data) {
+                if (data){
+                    if (username == data.from){
+                        addMessage(data.from + " (You)", data.message);
+                    }else{
+                        addMessage(data.from, data.message);
+                    }
+                }
+            });
+
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (message && socket) {
+                const data = { "message": message, "room": room, "from": username };
+                socket.emit('message', data);
+                input.value = '';
+            }else if (message == null){
+                console.log("Error, input can't be empty")
+                alert("Input cannot be null")
+            }else if (socket == null){
+                // Show postgame selection here
+                addMessage("Server", "Not in a session. Press Join button.")
+            }
+        }
+
+
+        document.getElementById('sendButton').addEventListener('click', sendMessage);
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function addMessage(from, message) {
+            const messages = document.getElementById('messages');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            messageElement.innerHTML = `<span class="username">${from}:</span> ${message} <span class="timestamp">${timestamp}</span>`;
+            messages.appendChild(messageElement);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function showChatWindow() {
+            document.getElementById('registerForm').classList.add('hide');
+            document.getElementById('chatWindow').classList.add('show');
+            document.getElementById('sessionContainer').classList.add('show');
+            document.getElementById('messageInputWrapper').style.display = 'flex';
+        }
+
+
+        function clearNames(){
+            ii = document.getElementById('info-item')
+
+            // Get all button elements within the target element
+            const buttons = ii.getElementsByTagName('button');
+
+            // Remove each button from the target element
+            for (let i = buttons.length - 1; i >= 0; i--) {
+                ii.removeChild(buttons[i]);
+            }
+
+        }
+
+        function hideVotingWindow() {
+            clearNames()
+            document.getElementById('voting-window').classList.remove('show');
+        }
+
+        function showVotingWindow() {
+            vw = document.getElementById('voting-window')
+
+            vw.classList.add('show');
+        }
+
+        function generateRandomString(length) {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return result;
+        }
+
+        function logError(message, error) {
+            console.error(`${message}:`, error);
+        }
+    </script>
+</body>
+</html>

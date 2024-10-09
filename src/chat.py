@@ -1,9 +1,9 @@
 from flask import Blueprint, session
 from flask_socketio import emit, join_room
 from src import socketio, session_manager
-from src.models import UserModel, UserState, MessageModel, SessionModel, db_session
+from src.models import UserModel, UserState, SessionState, SessionModel, db_session, session_votes
 from src.utils import send_message_with_delay, send_message, send_server_message_with_delay
-from datetime import datetime
+import nh3
 
 bp = Blueprint('chat', __name__, url_prefix="/chat")
 
@@ -20,8 +20,14 @@ def is_registered(func):
 @socketio.on('connect', namespace='/chat')
 @is_registered
 def handle_connect():
-	user = session['user']
-	print("Connect:", {"user_id" : user})
+	user_id = session['user']
+	with db_session() as db:
+		tmp_user = db.query(UserModel).filter_by(id=user_id).one_or_none()
+		if tmp_user and tmp_user.session_id:
+			tmp_user.state = UserState.ACTIVE
+		elif tmp_user and not tmp_user.session_id:
+			tmp_user.state = UserState.WAITING
+			print(f"User {tmp_user.username} has disconnected!")
 
 
 @socketio.on('disconnect', namespace='/chat')
@@ -36,21 +42,45 @@ def handle_disconnect():
 					current_session = db.query(SessionModel).filter_by(id=tmp_user.session_id).one_or_none() 
 					print(current_session)
 					if current_session:
-						session_manager.disconnect_player(tmp_user.id)
+						#session_manager.disconnect_player(tmp_user.id)
+						tmp_user.state = UserState.DISCONNECTED
 						disconnect_msg = send_message(sockio=socketio, sender_name="Server", session_id=None, room=current_session.room, message=f'{tmp_user.username} has disconnected!')
 						current_session.messages.append(disconnect_msg)
 				print(f"User {tmp_user.username} has disconnected!")
 
-	
+
+
+##vote_req['round'] should start at 1
+@socketio.on('submit_vote', namespace='/chat')
+@is_registered
+def handle_vote(vote_req):
+	if 'round' not in vote_req:
+		return
+	user_id = session['user']
+	round = vote_req['round']
+	voted_id = vote_req['voted_id']
+	with db_session() as db:
+		user = db.query(UserModel).filter_by(id=user_id).one_or_none()
+		if user and user.session_id:
+			session_manager.handle_vote(user_id=user_id, session_id=user.session_id, round=round, voted_id=voted_id)
+
+
+
+
+
 @socketio.on('join', namespace='/chat')
 @is_registered
 def handle_join(join_req):
 	
+	if "room" not in join_req or "username" not in join_req:
+		send_message(sockio=socketio, sender_name="Server", room=None, session_id=None, message='Error missing room or user field')
+		return
+
 	room = join_req["room"]
 	username = join_req['username']
 
 	if not room or not username:
-		emit('error', {'msg': 'Username and room name are required!'})
+		send_message(sockio=socketio, sender_name="Server", room=None, session_id=None, message='username and room fields cannot be empty')
 		return
 	
 	with db_session() as db:
@@ -83,12 +113,16 @@ def handle_msg(data):
 			elif sender == tmp_user.username and "room" in data:
 				room = data["room"]
 				s = db.query(SessionModel).filter_by(id=tmp_user.session_id).one_or_none()
-				if not s: # not a valid session, cant send messages
-					return
-				if tmp_user in s.players:
-					message = data["message"]
+				if s and s.state != SessionState.INACTIVE: # not a valid session, or session inactive
+					if tmp_user in s.players:
 
+						origin = data["message"]
+						cleaned_message = nh3.clean(origin)
+						if not cleaned_message:
+							msg = send_server_message_with_delay(sockio=socketio, session_id=s.id, room=room, message=f"{tmp_user.username} is attempting XSS! Everyone shame them")
+							s.messages.append(msg)
+							return
 
-					msg = send_message(sockio=socketio, sender_name=sender, session_id=s.id, room=room, message=message, include_self=False)
-					s.messages.append(msg)
-					print([msg.to_dict() for msg in s.messages])
+						msg = send_message(sockio=socketio, sender_name=sender, session_id=s.id, room=room, message=cleaned_message, include_self=True)
+						s.messages.append(msg)
+						print([msg.to_dict() for msg in s.messages])

@@ -51,6 +51,13 @@ def send_message_with_delay(sockio : SocketIO, sender_name : str, session_id : i
     sockio.sleep(delay)
     return send_message(sockio=sockio, sender_name=sender_name, session_id=session_id, room=room, message=message, include_self=include_self)
 
+def emit_message(sockio : SocketIO, action : str, room : str, data : dict, delay : int = 1, include_self=True):
+    sockio.sleep(delay)
+    if room:
+        sockio.emit(action, data, namespace='/chat', room=room, include_self=include_self)
+    else:
+        sockio.emit(action, data, namespace='/chat', include_self=include_self)
+
 
 def send_server_message_with_delay(sockio : SocketIO, session_id : int, room : str, message : str, delay : int = 1):
     return send_message_with_delay(sockio=sockio, sender_name="Server", session_id=session_id, room=room, message=message, include_self=True, delay=delay)
