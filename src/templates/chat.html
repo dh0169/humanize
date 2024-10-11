@@ -259,6 +259,7 @@
             display: flex;
             flex-direction: column;
             align-items: flex-start;
+            font-size: .95rem;
         }
 
         .info-item strong {
@@ -549,7 +550,7 @@
                     }
 
                     // Get this from the data obj
-                    startCountdown(15);
+                    startCountdown(data.time);
                 }
             });
 
@@ -569,6 +570,7 @@
                     //Create button -> set textContent to username, set ValueToSubmit is user_id, and setClickhandler is the emit function
                     data.users.forEach(user => {
                         const button = document.createElement('button');
+                        console.log(user);
                         if (user.username != username){
                             button.textContent = user.username
                             button.addEventListener("click", function(){
@@ -578,7 +580,8 @@
                             console.log(button);
                         }
                     });
-
+                    setRoundLabel(data.round + " (Voting)");
+                    startCountdown(data.time);
                     // This will be in the button handler for the buttons above
                 }
             });

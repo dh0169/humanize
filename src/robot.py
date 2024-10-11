@@ -135,7 +135,7 @@ class RobotController:
                 print(f"{self.get_robot_name(session_id=session_id)}: No New messages in chat")
                 return None
              
-            for msg in session.messages[len(session.messages) // 2 :]:
+            for msg in session.messages:
                 messages.append({
                     "role": "user" if msg.sender != self.type.value else "assistant",
                     "content": json.dumps(msg.to_dict())

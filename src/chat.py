@@ -62,7 +62,12 @@ def handle_vote(vote_req):
 	with db_session() as db:
 		user = db.query(UserModel).filter_by(id=user_id).one_or_none()
 		if user and user.session_id:
-			session_manager.handle_vote(user_id=user_id, session_id=user.session_id, round=round, voted_id=voted_id)
+			tmp_session = db.query(SessionModel).filter_by(id=user.session_id).one_or_none()
+			if tmp_session:
+				tmp_room, tmp_id = tmp_session.room, tmp_session.id
+
+				session_manager.handle_vote(user_id=user_id, session_id=tmp_id, round=round, voted_id=voted_id)
+				send_server_message_with_delay(sockio=socketio, session_id=tmp_id, room=tmp_room, message="Vote submitted!")
 
 
 
@@ -108,21 +113,20 @@ def handle_msg(data):
 		sender = data["from"]
 		with db_session() as db:
 			tmp_user = db.query(UserModel).filter_by(id=session['user']).one_or_none()
-			if not tmp_user:
-				return
-			elif sender == tmp_user.username and "room" in data:
-				room = data["room"]
-				s = db.query(SessionModel).filter_by(id=tmp_user.session_id).one_or_none()
-				if s and s.state != SessionState.INACTIVE: # not a valid session, or session inactive
-					if tmp_user in s.players:
+			if tmp_user and tmp_user.state == UserState.ACTIVE:
+				if sender == tmp_user.username and "room" in data:
+					room = data["room"]
+					s = db.query(SessionModel).filter_by(id=tmp_user.session_id).one_or_none()
+					if s and s.state != SessionState.INACTIVE and room == s.room: # not a valid session, or session inactive
+						if tmp_user in s.players:
 
-						origin = data["message"]
-						cleaned_message = nh3.clean(origin)
-						if not cleaned_message:
-							msg = send_server_message_with_delay(sockio=socketio, session_id=s.id, room=room, message=f"{tmp_user.username} is attempting XSS! Everyone shame them")
+							origin = data["message"]
+							cleaned_message = nh3.clean(origin)
+							if not cleaned_message:
+								msg = send_server_message_with_delay(sockio=socketio, session_id=s.id, room=room, message=f"{tmp_user.username} is attempting XSS! Everyone shame them")
+								s.messages.append(msg)
+								return
+
+							msg = send_message(sockio=socketio, sender_name=sender, session_id=s.id, room=room, message=cleaned_message, include_self=True)
 							s.messages.append(msg)
-							return
-
-						msg = send_message(sockio=socketio, sender_name=sender, session_id=s.id, room=room, message=cleaned_message, include_self=True)
-						s.messages.append(msg)
-						print([msg.to_dict() for msg in s.messages])
+							print([msg.to_dict() for msg in s.messages])

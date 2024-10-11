@@ -99,6 +99,7 @@ class UserState(enum.Enum):
     DISCONNECTED = -1
     WAITING = 0
     ACTIVE = 1
+    VOTED_OUT = 2
 
 class UserModel(Base):
     __tablename__ = 'users'
@@ -141,7 +142,7 @@ class SessionModel(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True) 
     room = Column(String(100), unique=True)                               # Unique Room name
-    robot = Column(String(20), nullable=True, default=None)               # AI Model Name (i.e gpt-3.5 turbo)
+    robot_id = Column(Integer, ForeignKey('users.id'), nullable=True, default=None)               # AI Model Name (i.e gpt-3.5 turbo)
     host_id = Column(Integer, ForeignKey('users.id'), nullable=True)      # User id who is host
     state = Column(Enum(SessionState), default=SessionState.PENDING)      # Session state
     max_players_allowed = Column(Integer, default=4)
@@ -205,14 +206,14 @@ class SessionModel(Base):
     
 
     def __repr__(self):
-        return (f"<Session(id={self.id}, room={self.room!r}, robot={self.robot!r}, "
+        # robot={self.robot_id if self.robot_id else None},
+        return (f"<Session(id={self.id}, room={self.room!r},  "
                 f"host_id={self.host_id}, state={self.state.value!r}, "
                 f"max_players_allowed={self.max_players_allowed})>")
     
     def to_dict(self):
         r = {
             'room': self.room,
-            'robot': self.robot,
             'host_id': self.host_id,
             'state': self.state.name,
             'max_players_allowed': self.max_players_allowed,

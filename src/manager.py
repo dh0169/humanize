@@ -6,8 +6,10 @@ from sqlalchemy.exc import  NoResultFound
 from src.robot import RobotController, RobotType
 
 
-MAX_HUMAN_PLAYERS = 1
-MAX_TIME = 15 # In seconds, right now 15 for testing
+MAX_HUMAN_PLAYERS = 2
+MIN_HUMAN_PLAYERS_NEEDED = 2
+MAX_TIME = 25 # In seconds, right now 15 for testing
+VOTE_TIME = 10
 
 
 class SessionManager():
@@ -39,23 +41,27 @@ class SessionManager():
             db.flush()
             
 
-            robot_user_id = robot_user.id
+            tmp_session.robot_id = robot_user.id
+            robot_user_id = tmp_session.robot_id
+
             current_state = tmp_session.state
+            number_of_rounds = len(tmp_session.players)
 
 
         #Starting message
-        send_server_message_with_delay(sockio=socketio, session_id=session_id, room=session_room, message="Session is starting in 10s...")
-        socketio.sleep(10)
+        send_server_message_with_delay(sockio=socketio, session_id=session_id, room=session_room, message="Session is starting in 5s...")
+        socketio.sleep(5)
         #Main game loop, Basically while the session is ACTIVE, do stuff.
         robot = RobotController(RobotType.gpt3_5, robot_name=robot_name)
 
         ## Run a round, rounds are indexed starting at 1##
         ##########################################################################################################################################
         emit_message(sockio=socketio, action='session_start', room=session_room, data={"msg" : "Session started."}, delay=0)
-        for i in range(1,3):
-            send_server_message_with_delay(sockio=socketio, session_id=session_id, room=session_room, message=f"<h1>Round {i} started!</h1><p>There is a bot among you...</p>")
+        current_round = 1
+        while current_round <= number_of_rounds: #[1, number_of_rounds+1)
+            send_server_message_with_delay(sockio=socketio, session_id=session_id, room=session_room, message=f"<h1>Round {current_round} started!</h1><p>There is a bot among you...</p>")
             start_time = time.time()
-            emit_message(sockio=socketio, action='round_start', room=session_room, data={"round" : i}, delay=0)
+            emit_message(sockio=socketio, action='round_start', room=session_room, data={"round" : current_round , "time" : MAX_TIME}, delay=0)
 
             while current_state == SessionState.ACTIVE:
                 # Elapsed time 2 minutes?
@@ -82,17 +88,13 @@ class SessionManager():
                 except Exception as e:
                     print(e)
                     
-            emit_message(sockio=socketio, action='round_end', room=session_room, data={"round" : i}, delay=0)
-            send_server_message_with_delay(sockio=socketio, session_id=session_id, room=session_room, message=f"<h1>Round {i} finished!</h1><span>chat disabled</span>")
+            emit_message(sockio=socketio, action='round_end', room=session_room, data={"round" : current_round}, delay=0)
+            send_server_message_with_delay(sockio=socketio, session_id=session_id, room=session_room, message=f"<h1>Round {current_round} finished!</h1><span>chat disabled</span>")
             ##########################################################################################################################################
 
             # clients will trigger ("submit_vote")
             ## Conduct Voting for said round##
                 ## Trigger voting action for socketio
-                ## Collect casted votes, if connection issues, player vote not counted
-                ## Determine who gets voted out
-                ## Determine if players or AI wins
-
             with db_session() as db:
                 tmp_session = db.query(SessionModel).filter_by(id=session_id).one_or_none()
                 if(tmp_session):
@@ -100,10 +102,67 @@ class SessionManager():
 
             with db_session() as db:
                 tmp_session = db.query(SessionModel).filter_by(id=session_id).one_or_none()
-                emit_message(sockio=socketio, action="begin_vote", room=session_room, data={'begin_voting' : True, "round" : i, "users" : [p.to_dict() for p in tmp_session.players]})
-                socketio.sleep(10)
-                emit_message(sockio=socketio, action="stop_vote", room=session_room, data={'stop_voting' : True, "round" : i})
+                active_players = []
+                for p in tmp_session.players:
+                    if p.state == UserState.ACTIVE:
+                        active_players.append(p.to_dict())
+                emit_message(sockio=socketio, action="begin_vote", room=session_room, data={'begin_voting' : True, "round" : current_round, "users" : active_players, "time" : VOTE_TIME})
+                socketio.sleep(VOTE_TIME)
+                emit_message(sockio=socketio, action="stop_vote", room=session_room, data={'stop_voting' : True, "round" : current_round})
+
+                majority_vote = self.calculate_votes(session_id=session_id, round_number=current_round)
+                if majority_vote:
+                    user_to_kick = db.query(UserModel).filter_by(id=majority_vote['id']).one_or_none()
+                    user_to_kick.state = UserState.VOTED_OUT
+                    db.flush()
+
+                    send_server_message_with_delay(sockio=socketio, session_id=session_id, room=session_room, message=f"{user_to_kick.username} has been voted out!")
+
+                    if majority_vote['id'] == tmp_session.robot_id:
+                        #humans_win_handler
+                        send_server_message_with_delay(sockio=socketio, session_id=session_id, room=session_room, message=f"<h1>The AI has been identified, Humans win!👩🏻‍🤝‍👨🏾</h1>", delay=5)
+                        break # exit session
+                else:
+                    send_server_message_with_delay(sockio=socketio, session_id=session_id, room=session_room, message=f"no one was voted out...")
+
+                    
+                    
+                active_player_count = self.get_active_player_count(session_id=session_id)
+                if active_player_count > MIN_HUMAN_PLAYERS_NEEDED:
+                    current_round = current_round - 1
+                    send_server_message_with_delay(sockio=socketio, session_id=session_id, room=session_room, message=f"<h1>The AI lives on...</h1>", delay=5)
+                elif active_player_count <= MIN_HUMAN_PLAYERS_NEEDED or current_round == number_of_rounds:
+                    ascii_art = """
+                    (arrowhead)	⤜(ⱺ ʖ̯ⱺ)⤏
+                    (apple)	
+                    (ass)
+                    (butt)	(‿|‿)
+                    (awkward)	•͡˘㇁•͡˘
+                    (bat)	/|\ ^._.^ /|\
+                    (bear)
+                    (koala)	ʕ·͡ᴥ·ʔ
+                    (bearflip)	ʕノ•ᴥ•ʔノ ︵ ┻━┻
+                    (bearhug)	ʕっ•ᴥ•ʔっ
+                    """
+                    evil_message = robot.simple_ask(f"You are a chat bot that has been pretending to be human this whole time. Generate a 2-5 word message claiming your victory over the human losers hehe or just use a ascii art like the following: {ascii_art}")
+                    send_message_with_delay(sockio=socketio, sender_name=robot.get_robot_name(session_id=session_id), session_id=session_id, room=session_room, message=evil_message, delay=5)
+                    send_server_message_with_delay(sockio=socketio, session_id=session_id, room=session_room, message="<h1>AI Wins 🤖</h1>")
+                    break
+
+            current_round += 1
+
+
             
+
+
+
+            ## Collect casted votes, if connection issues, player vote not counted
+            ## Determine who gets voted out
+            ## Determine if players or AI wins
+
+
+
+
             with db_session() as db:
                 tmp_session = db.query(SessionModel).filter_by(id=session_id).one_or_none()
                 if(tmp_session):
@@ -200,7 +259,7 @@ class SessionManager():
             if tmp_session:
                 tmp_session.state = SessionState.INACTIVE
                 send_message_with_delay(sockio=socketio, sender_name="Server", session_id=session_id, 
-                                    room=tmp_session.room, message=f"Session has ended...")
+                                    room=tmp_session.room, message=f"Session has ended...", delay=5)
                 socketio.emit('session_end', {"didEnd" : True})
                 
                 for p in tmp_session.players:
@@ -256,13 +315,14 @@ class SessionManager():
                 print("Session pending:", session_pending)
                 return False
             
-    def handle_vote(self, user_id : int, session_id : int, round : int, voted_id : int, ):
+    def handle_vote(self, user_id : int, session_id : int, round : int, voted_id : int, on_complete = None):
         with db_session() as db:
             tmp_session = db.query(SessionModel).filter_by(id=session_id).one_or_none()
 
             if tmp_session and tmp_session.state == SessionState.INACTIVE:
                 #If vote array exits, update current set current round to vote
 
+                #
                 vote_entry = db.query(session_votes).filter_by(session_id=session_id, user_id=user_id).one_or_none()
                 if vote_entry:
                     # If the user has already voted in this session, update the existing votes_per_round JSON
@@ -277,7 +337,7 @@ class SessionManager():
 
                 else:
                     # If the user hasn't voted in this session yet, create a new entry
-                    size = len(tmp_session.players)
+                    size = len(tmp_session.players) - 1 # Minus 1 for AI, for example 4 human players and 1 AI is 3 rounds.
                     new_votes_per_round = [None] * (size if size >= 1 else 1)  # Create a list with 'None' for past rounds
                     new_votes_per_round[round - 1] = voted_id
                     
@@ -286,5 +346,70 @@ class SessionManager():
                     db.execute(vote_entry)
                 
                 print(f"User(id: {user_id}) submitted vote!")
+
+            if on_complete:
+                on_complete()
+
+    
+
+    #  Count the votes of Session(id=session_id, round=round_number) and if there is majority, return user_id else none
+    def calculate_votes(self, session_id : int, round_number : int):
+        with db_session() as db:
+            tmp_session = db.query(SessionModel).filter_by(id=session_id).one_or_none()
+            if not tmp_session:
+                print(f"session_id:{session_id} is not a valid session")
+                return
+
+            half_of_player_size = (len(tmp_session.players)-1) / 2 # Not counting AI vote
+            votes_counted = {} # user_id : votes
+
+            for user in tmp_session.players:
+                if user.id == tmp_session.robot_id:
+                    print("robots can't vote...yet")
+                    continue
+
+                try:
+                    vote_entry = db.query(session_votes).filter_by(session_id=session_id, user_id=user.id).one_or_none()
+                    if (vote_entry):
+                        user_voted_per_round = vote_entry.user_voted_per_round
+                        possible_id = user_voted_per_round[round_number - 1] # Round number 1 conisides with index the first index, 0.
+                        user_voted = db.query(UserModel).filter_by(id=possible_id).one()
+
+                        if user_voted.id not in votes_counted:
+                            votes_counted[user_voted.id] = 1
+                        else:
+                            votes_counted[user_voted.id] += 1
+
+                        print(f"{user.username} voted for {user_voted.username}")
+                    else:
+                        print(f"{user.username} didn't vote")
+
+                except NoResultFound:
+                    print(f"calculate_vote could not find user with id {possible_id}")
+
+            # key defines a lambda that takes in x which is an elem from votes_counted.items() and returns the value to compare.
+            if not votes_counted:
+                return None
+            max_vote = {'id' : None, 'count' : None}
+            tmp_vote = max(votes_counted.items(), key=lambda x: x[1])
+
+            max_vote['id'] = tmp_vote[0]
+            max_vote['count'] = tmp_vote[1]
+
+            if max_vote['count'] > half_of_player_size: # majority
+                return max_vote
+            else:
+                return None
+    
+    def get_active_player_count(self, session_id):
+        with db_session() as db:
+            tmp_session = db.query(SessionModel).filter_by(id=session_id).one_or_none()
+            if tmp_session:
+                active_player_count = 0
+                for player in tmp_session.players:
+                    if player.id != tmp_session.robot_id and player.state != UserState.VOTED_OUT:
+                        active_player_count += 1
+                return active_player_count
+        return None
                 
 
