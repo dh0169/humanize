@@ -1,6 +1,6 @@
 from flask import Blueprint, session
 from flask_socketio import emit, join_room
-from src import socketio, session_manager
+from src import socketio, session_manager, SessionManager
 from src.models import UserModel, UserState, SessionState, SessionModel, db_session, session_votes
 from src.utils import send_message_with_delay, send_message, send_server_message_with_delay
 import nh3
@@ -91,19 +91,24 @@ def handle_join(join_req):
 	with db_session() as db:
 		user_id = session['user']
 		tmp_user = db.query(UserModel).filter_by(id=user_id).one_or_none()
-		if not tmp_user or not tmp_user.session_id:
-			send_server_message_with_delay(sockio=socketio, session_id=None, room=None, message="Please join a valid session", delay=0)
-			return
-		tmp_session = db.query(SessionModel).filter_by(id=tmp_user.session_id).one_or_none()
+		if tmp_user and tmp_user.session_id:
+			tmp_session = db.query(SessionModel).filter_by(id=tmp_user.session_id).one_or_none()
+			if not tmp_session:
+				send_server_message_with_delay(sockio=socketio, session_id=None, room=None, message="Please join a valid session", delay=0)
+				return
 
 
-		#Tie the id to the session object, Set the cookie to the id
-		join_room(room)
-		print(f'Join: {username} has entered {room}!')
-		tmp_msg = send_message(sockio=socketio, sender_name="Server", session_id=None, room=room, message=f'user joined session!')
-		
-		#Add message to database
-		tmp_session.messages.append(tmp_msg)
+			#Tie the id to the session object, Set the cookie to the id
+			join_room(room)
+			print(f'Join: {username} has entered {room}!')
+			#Add message to database
+
+			user_num = len(tmp_session.players)
+			tmp_msg = send_message(sockio=socketio, sender_name="Server", session_id=None, room=room, message=f'user {user_num}/{SessionManager.MAX_HUMAN_PLAYERS + 1} joined!')
+
+			tmp_session.messages.append(tmp_msg)
+
+			
 
 # On new message
 @socketio.on('message', namespace='/chat')

@@ -176,6 +176,9 @@ class SessionModel(Base):
     def set_host(self, host_id):
         self.host_id = host_id
 
+    def set_bot(self, bot_id):
+        self.robot_id = bot_id
+
 
     def get_user_count(self):
         return len(self.players)

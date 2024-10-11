@@ -21,5 +21,4 @@ if __name__ == '__main__':
     if not PORT:
         PORT = 5000
 
-    socketio.run(app, host=HOST, port=int(PORT))#, certfile='./cert.pem', keyfile='./key.pem') # use this for ssl, need to change html also
-
+    socketio.run(app, host=HOST, port=int(PORT))

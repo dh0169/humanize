@@ -1,10 +1,34 @@
 import os
+from flask_httpauth import HTTPBasicAuth
+from werkzeug.security import check_password_hash, generate_password_hash
+
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 DATABASE_URI = os.environ.get("DATABASE_URI")
-FLASK_SECRET_KEY = os.getenv("SECRET_KEY")
-FLASK_USER = os.getenv("FLASK_USER")
-FLASK_PW = os.getenv("FLASK_PW")
+FLASK_SECRET_KEY = os.environ.get("SECRET_KEY")
+
+HUMANIZE_USER = os.environ.get("HUMANIZE_USER")
+HUMANIZE_USER_PW = os.environ.get("HUMANIZE_USER_PW")
+
+HUMANIZE_ADMIN = os.environ.get("HUMANIZE_ADMIN")
+HUMANIZE_ADMIN_PW = os.environ.get("HUMANIZE_ADMIN_PW")
+
+
+auth = HTTPBasicAuth()
+
+#if debugging
+users = {
+	HUMANIZE_ADMIN : generate_password_hash(HUMANIZE_ADMIN_PW),
+	HUMANIZE_USER : generate_password_hash(HUMANIZE_USER_PW)
+}
+
+@auth.verify_password
+def verify_password(username, password):
+    if username in users and check_password_hash(users.get(username), password):
+        return username
+
+
+
 WS_URL = "/chat"
 
 
