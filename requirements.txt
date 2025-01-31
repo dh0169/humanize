@@ -1,7 +1,7 @@
-Flask==2.3.2
-Flask-SocketIO==5.3.4
-python-socketio==5.8.0
-eventlet==0.33.3
+Flask
+Flask-SocketIO
+python-socketio
+eventlet
 
 nh3
 flask_httpauth
@@ -12,3 +12,4 @@ requests
 openai
 greenlet
 python-dotenv
+setuptools

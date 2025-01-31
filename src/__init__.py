@@ -30,7 +30,9 @@ def create_app(debug=False):
 
 	app.config.from_mapping(
 		SECRET_KEY = FLASK_SECRET_KEY,
-		DEBUG = debug
+		DEBUG = debug,
+		SESSION_COOKIE_SAMESITE='lax',   # Allows cross-site cookies
+		#SESSION_COOKIE_SECURE=True,  
 	)
 	
 	
@@ -53,7 +55,8 @@ def create_app(debug=False):
 		db.query(SessionModel).delete()
 		db.query(UserModel).update({ UserModel.state : UserState.WAITING})
 	
-	CORS(app)
+
+	CORS(app, supports_credentials=True, origins=['http://localhost:3000', 'http://127.0.0.1:3000'])
 	
 	socketio.init_app(app, async_model="eventlet")
 
