@@ -5,13 +5,15 @@ from src.models import db_session, UserModel, SessionModel, SessionState
 from flask import Blueprint, session, request, jsonify
 from src.config import WS_URL
 from http import HTTPStatus
+from copy import deepcopy
 
 bp = Blueprint("api", __name__, url_prefix="/api", )
 MAX_USERNAME_SIZE = 30
 
+
 @bp.route("/")
 def index():
-    return jsonify(message="Chat API is running"), HTTPStatus.OK
+    return jsonify(status='ok', message='humanize api is up'), HTTPStatus.OK
 
 
 @bp.route("/lobby", methods=["GET", "POST"])
@@ -31,32 +33,40 @@ def lobby():
             if request.json.get("random"):
                 room_joined, msg  = session_manager.join_session(user_id=user_id, random_room=True, sock=socketio)
             else:
-                if not room or type(room) is not str:
+                if not room:
                     return (
                     jsonify(
-                        did_succeed=False,
-                        message=f"room cannot be empty or null",
+                        status='error',
+                        message="room cannot be empty or null",
+                    ),
+                    HTTPStatus.OK,
+                )
+                
+                if type(room) is not str:
+                    return (
+                    jsonify(
+                        status='error',
+                        message="room must be a string",
                     ),
                     HTTPStatus.OK,
                 )
                 room_joined, msg = session_manager.join_session(user_id=user_id, room=room, sock=socketio)
                 
             if room_joined:
-                return (
-                    jsonify(
-                        message=msg,
-                        data={"room": room_joined},
-                        did_succeed=True,
-                        ws=WS_URL
-
-                    ),
+                content = {
+                    "data":{"room": room_joined},
+                    "status":'ok',
+                    "ws":WS_URL
+                }
+                return ( 
+                    jsonify(status='ok', message=msg, content=content),
                     HTTPStatus.OK,
                 )
             else:
                 return (
                     jsonify(
                         message=msg,
-                        did_succeed=False
+                        status='error'
                     ),
                     HTTPStatus.OK,
                 )
@@ -65,34 +75,34 @@ def lobby():
             if not room:
                 return (
                     jsonify(
-                        did_succeed=False,
-                        message=f"room cannot be empty or null",
+                        status='error',
+                        message="room cannot be empty or null",
                     ),
                     HTTPStatus.BAD_REQUEST,
                 )
             room_joined, msg = session_manager.create_session(host_id=user_id, room=room, sock=socketio)
             if(room_joined):
-                return (
-                    jsonify(
-                        message=msg,
-                        data={"room": room_joined},
-                        did_succeed=True,
-                        ws=WS_URL
-                    ),
+                content = {
+                    "data":{"room": room_joined},
+                    "status":'ok',
+                    "ws":WS_URL
+                }
+                return ( 
+                    jsonify(status='ok', message=msg, content=content),
                     HTTPStatus.OK,
                 )
             else:
                 return (
                     jsonify(
                         message=msg,
-                        did_succeed=False
+                        status='error'
                     ),
                     HTTPStatus.OK,
                 )
     with db_session() as db:
         current_user = db.query(UserModel).filter_by(id=user_id).one()
         return (
-            jsonify(message=f"Welcome {current_user.username}!", data={"user": current_user.to_dict()}),
+            jsonify(status='ok', message=f"Welcome {current_user.username}!", content={"user": current_user.to_dict()}),
             HTTPStatus.OK,
         )
 
@@ -104,12 +114,12 @@ def list_lobby():
         pending_games = [gs.to_dict() for gs in db.query(SessionModel).filter_by(state=SessionState.PENDING).all()]
         active_games = [gs.to_dict() for gs in db.query(SessionModel).filter_by(state=SessionState.ACTIVE).all()]
 
+        content = {
+            'pending_sessions' : pending_games,
+            'active_sessions' : active_games
+        }
         return (
-            jsonify(
-                message=f"Game sessions",
-                pending_sessions=pending_games,
-                active_sessions=active_games
-            ),
+            jsonify(status='ok', message='Available sessions', content=content),
             HTTPStatus.OK,
         )
 
@@ -120,12 +130,8 @@ def list_users():
     with db_session() as db:
         users = db.query(UserModel).all()
         user_dicts = [u.to_dict() for u in users]
-        
-        return (
-            jsonify(
-                message="Registered users",
-                users=user_dicts,
-            ),
+        return ( 
+            jsonify(status='ok', message='Registered users', content=user_dicts),
             HTTPStatus.OK,
         )
 
@@ -137,8 +143,8 @@ def register():
     if not username.isalnum() or len(username) > 30:
         return (
             jsonify(
-                did_succeed=False,
-                message=f"username must be a max 30 characters, alpha numeric only.",
+                status='error',
+                message="username must be a max 30 characters, alpha numeric only.",
             ),
             HTTPStatus.OK,
         )
@@ -157,15 +163,15 @@ def register():
             print("User registered:", tmp_user.to_dict())
             return (
                 jsonify(
-                    did_succeed=True,
+                    status='ok',
                     message=f"Registration Success!",
-                    data={"user": tmp_user.username}
+                    content={"user": tmp_user.username}
                 ),
                 HTTPStatus.OK,
             )
         
         else:
-            return jsonify(did_succeed=False, message=f"User already exists"), HTTPStatus.OK
+            return jsonify(status='error', message=f"User already exists"), HTTPStatus.OK
 
 
 
@@ -178,6 +184,6 @@ def logout():
     session_manager.disconnect_player(user_id=user_id)
     if "user" in session:
         session.pop("user")
-    return jsonify(message=f"Logout successful. Adios, pal."), HTTPStatus.OK
+    return jsonify(status='ok', message=f"Logout successful. Adios, pal."), HTTPStatus.OK
 
 

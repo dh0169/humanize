@@ -15,17 +15,12 @@ COPY .env /var/www/html/humanize
 RUN pip install --no-cache-dir -r requirements.txt
 
 
-#SSL generation, maybe change to certbot
+# SSL generation, maybe change to certbot
 # RUN chmod +x generate_selfsigned.sh
 # RUN ./generate_selfsigned.sh
 
-# Make port 80 available to the world outside this container
-EXPOSE 8000
-
-# Define environment variable
-# ENV SECRET_KEY secret1
- ENV FLASK_USER human
- ENV FLASK_PW 76T4uSWKdZRwAhUAuNbn
+# Make port 5000 available to the world outside this container
+EXPOSE 5000
 
 # Run app.py when the container launches
 CMD ["python", "main.py"]

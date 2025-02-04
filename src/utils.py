@@ -15,12 +15,12 @@ def is_registered(f):
         try:
             with db_session() as db:
                 if "user" not in session :
-                    return jsonify(did_succeed=False, message="Please register a username"), HTTPStatus.UNAUTHORIZED
+                    return jsonify(status='error', message="Please register a username"), HTTPStatus.UNAUTHORIZED
                 db.query(UserModel).filter_by(id=session["user"]).one()
 
             return f(*args, **kwargs)
         except NoResultFound as e:
-            return jsonify(did_succeed=False, message="Please register a username"), HTTPStatus.UNAUTHORIZED        
+            return jsonify(status='error', message="Please register a username"), HTTPStatus.UNAUTHORIZED        
 
     return decorated_function
 
