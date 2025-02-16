@@ -1,7 +1,7 @@
 // src/constants/apiEndpoints.ts
 
 // Base API URL - defined in .env file
-const BASE_API_URL = 'https://2d41-79-127-217-43.ngrok-free.app/api'
+const BASE_API_URL = 'https://8b11-23-162-40-58.ngrok-free.app/api'
 //const BASE_API_URL = 'http://127.0.0.1:5000/api';
 
 // API Endpoint Definitions
