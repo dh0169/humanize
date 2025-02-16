@@ -43,17 +43,29 @@ const Registration = () => {
         alignItems: "center",
         justifyContent: "center",
         minHeight: "100vh",
-        backgroundColor: "#f0f2f5",
+        backgroundColor: "#E7FFE4",
       }}
-    >
+    > 
       <img
         src="/humanize_logo.png"
         alt="Logo"
         style={{ width: "150px", marginBottom: "2rem" }}
-      />
+      /> 
+      <h1 style={{ fontSize: "3rem", fontWeight: "bold", margin: 0 }}>
+        Humanize
+      </h1>
+      <h2
+        style={{
+          fontSize: "1.5rem",
+          fontWeight: "bold",
+          marginBottom: "2rem",
+        }}
+      >
+        AI Among Us
+      </h2>
       <div
         style={{
-          backgroundColor: "#fff",
+          backgroundColor: "#b7fdce",
           padding: "2rem",
           borderRadius: "8px",
           boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
@@ -61,7 +73,7 @@ const Registration = () => {
           maxWidth: "400px",
         }}
       >
-        <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>
+        <h2 style={{ textAlign: "center", marginBottom: "1rem", marginTop: "-0.5rem" }}>
           Register
         </h2>
         <input
