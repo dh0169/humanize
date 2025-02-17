@@ -11,6 +11,10 @@ function App() {
      return localStorage.getItem("devSecret") === "letMeIn";
    };
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 6f0fea930b585c119cb741c3415d9ddf25cc9218
 
   return (
     <BrowserRouter>

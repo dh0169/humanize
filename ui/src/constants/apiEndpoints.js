@@ -29,3 +29,23 @@ export const dynamicAPIEndpoints = {
   // For instance, fetching a specific session by ID
   GET_SESSION_BY_ID: (sessionId) => `${API_ENDPOINTS.LOBBY.SESSIONS}/${sessionId}`,
 };
+
+export const checkLogin = async () =>{
+  try {
+    const res = await fetch(API_ENDPOINTS.LOBBY.BASE, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (res.ok){
+      const data = await res.json();
+      return data.content
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.log(error);
+    console.log("Network error. Please try again later.");
+  }
+}
