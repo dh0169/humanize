@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 import React, { useState, useEffect } from "react";
-import { API_ENDPOINTS, checkLogin } from "../constants/apiEndpoints"; // Adjust the path as needed
-=======
-import React, { useState } from "react";
-import { API_ENDPOINTS } from "../constants/apiEndpoints"; // Adjust the path as needed
->>>>>>> 6f0fea930b585c119cb741c3415d9ddf25cc9218
+import { API_ENDPOINTS, checkLogin } from "../constants/apiEndpoints"; 
 import { useNavigate } from "react-router";
 
 const Registration = () => {
@@ -12,7 +7,6 @@ const Registration = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-<<<<<<< HEAD
   useEffect(() => {
     checkLogin().then((current_user) => {
       // Do stuff with current user obj, like get username for display
@@ -24,8 +18,6 @@ const Registration = () => {
   });
 
   
-=======
->>>>>>> 6f0fea930b585c119cb741c3415d9ddf25cc9218
   const handleRegister = async () => {
     if (username.trim() === "") {
       setError("Username cannot be empty");
