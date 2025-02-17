@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router';
 import Registration from "./components/Registration";
 import UserInterface from "./components/UserInterface";
 import Debugger from "./components/Debugger";
+import About from "./components/About";
 
 function App() {
    const isDeveloper = () => {
@@ -15,9 +16,10 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Registration />} />
-        {/* <Route path="/about" element={<About />} /> */}
+        <Route path="/about" element={<About />} />
         {/* <Route path="Registration" element={<Registration />}/> */}
-        <Route path="Home" element={<UserInterface />} />
+        <Route path="/home" element={<UserInterface />} />
+        <Route path="/debug" element={isDeveloper() ? <Debugger /> : "Hey, what are you looking for?" } />
       </Routes>
     </BrowserRouter>
   );
