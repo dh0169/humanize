@@ -1,8 +1,35 @@
-import { API_ENDPOINTS } from "../constants/apiEndpoints"; // Adjust the path as needed
-import { Navigate, useNavigate } from "react-router";
+import React, { useEffect } from "react";
+import { API_ENDPOINTS, checkLogin } from "../constants/apiEndpoints"; // Adjust the path as needed
+import { useNavigate } from "react-router";
+import CustBut from "./CustBut";
 
 const UserInterface = () => {
-    const nav = useNavigate();
+    const navigate = useNavigate();
+
+    // Also add this to apiEndpoints?
+    const handleLogout = async () => {
+        try {
+          const res = await fetch(API_ENDPOINTS.AUTH.LOGOUT, {
+            credentials: "include",
+          });
+          const data = await res.json();
+          console.log(data);
+        } catch (error) {
+            console.log(error.message);
+        }
+    };
+
+    useEffect(() => {
+        checkLogin().then((current_user) => {
+          // Do stuff with current user obj, like get username for display
+          console.log(current_user) 
+          if(!current_user){
+            navigate("/");
+          }
+        })
+      });
+    
+
     return (
         <div
             style={{
@@ -32,34 +59,11 @@ const UserInterface = () => {
             >
                 AI Among Us
             </h2>
-            <button
-                onClick={() => nav("/play")}
-                style={{
-                    width: "20%",
-                    padding: "1rem 0.5rem",
-                    backgroundColor: "#6BE3DC",
-                    color: "#000",
-                    border: "1px solid#73726d",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                }}
-            >
-                Play
-            </button>
-            <button
-                onClick={() => nav("/about")}
-                style={{
-                    width: "20%",
-                    padding: "1rem 0.5rem",
-                    backgroundColor: "#6BE3DC",
-                    color: "#000",
-                    border: "1px solid#73726d",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                }}
-            >
-                About
-            </button>
+
+            // TODO: add name of logged in player?
+            <CustBut text="Play" navLoc="/play" />
+            <CustBut text="About" navLoc="/about"/>
+            <CustBut text="Logout" navLoc="/" onClick={handleLogout}/>
         </div>
     );
 }

@@ -4,6 +4,7 @@ import Registration from "./components/Registration";
 import UserInterface from "./components/UserInterface";
 import Debugger from "./components/Debugger";
 import About from "./components/About";
+import Play from "./components/Play";
 
 function App() {
    const isDeveloper = () => {
@@ -17,9 +18,9 @@ function App() {
       <Routes>
         <Route path="/" element={<Registration />} />
         <Route path="/about" element={<About />} />
-        {/* <Route path="Registration" element={<Registration />}/> */}
         <Route path="/home" element={<UserInterface />} />
         <Route path="/debug" element={isDeveloper() ? <Debugger /> : "Hey, what are you looking for?" } />
+        <Route path="/play" element={<Play />}/>
       </Routes>
     </BrowserRouter>
   );
