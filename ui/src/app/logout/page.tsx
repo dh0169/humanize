@@ -1,12 +1,11 @@
 "use client"
 
 import React from "react";
- 
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import Layout from "@/components/Layout";
-import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 import { useRouter } from 'next/navigation';
+import { API_ENDPOINTS } from "@/constants/apiEndpoints";
+
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 const logout: React.FC = () => {
     const router = useRouter();
@@ -29,13 +28,14 @@ const logout: React.FC = () => {
     };
 
     handleLogout();
+    
     return (
-        <Layout>
-            <Button disabled>
-                <Loader2 className="animate spin" />
-                Logging Out
-            </Button>
-        </Layout>
+            <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+                <Button disabled>
+                    <Loader2 className="animate spin" />
+                    Logging Out
+                </Button>
+            </div>
     )
 
 }

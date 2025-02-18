@@ -17,7 +17,6 @@ function Debugger() {
     return localStorage.getItem("devSecret") === "letMeIn";
   };
 
-  // TODO: fix error when going w/o dev secret
   if(!isDeveloper()) {
     router.push("/");
   }
