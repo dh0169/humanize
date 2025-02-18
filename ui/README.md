@@ -1,12 +1,15 @@
-# Getting Started with Create React App
+# Front-end Stack
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project was created using
+  - React 19
+  - Typescript 5.7.3
+  - NextJS 15.1.7
 
 ## Available Scripts
 
 In the project directory, you can run:
 
-### `npm start`
+### `npm run dev`
 
 Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
@@ -14,10 +17,9 @@ Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 The page will reload when you make changes.\
 You may also see any lint errors in the console.
 
-### `npm test`
+### `npm run test`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Testing implementation WIP;
 
 ### `npm run build`
 
@@ -27,13 +29,17 @@ It correctly bundles React in production mode and optimizes the build for the be
 The build is minified and the filenames include the hashes.\
 Your app is ready to be deployed!
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### `npm run start`
+
+Simulates a production hosting environment and a production build of the project.
 
 ## Learn More
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+You can learn more in the [NextJS documentation](https://nextjs.org/docs).
 
 To learn React, check out the [React documentation](https://reactjs.org/).
+
+To learn Typescript, check out the [TypeScript documentation](https://www.typescriptlang.org/docs/).
 
 ## Setup
 
@@ -47,7 +53,7 @@ To learn React, check out the [React documentation](https://reactjs.org/).
    ```
 3. **Run the development server**:
    ```bash
-   npm start
+   npm run dev
    ```
 4. Make sure your **Flask backend** is running on the URL defined by [`API_ENDPOINTS`](#api-endpoints) or configure a proxy in `package.json` to forward API requests if necessary.
 
@@ -61,9 +67,12 @@ ui
 └── src/
     ├── constants/      
     │   └── apiEndpoints.js   # Central place for API endpoint URLs
-    ├── App.js         # Main React Debugger page
-    ├── index.js       # Entry point that renders <App /> 
-    └── ...            # Other files (styling, tests, etc.)
+    ├── app/             # Describes the routes from NextJS
+    │   ├── layout.tsx   # Initializes the root
+    │   ├── page.tsx     # Actual layout of the page; occurs in every folder
+    │   └── ...
+    ├── components/    # Reusable components
+    └── ...            # Other files (libraries, tests, etc.)
 ```
 
 ### `apiEndpoints.ts`
