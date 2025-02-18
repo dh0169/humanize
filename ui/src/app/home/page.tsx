@@ -1,10 +1,18 @@
-import React, { useEffect } from "react";
-import { API_ENDPOINTS, checkLogin } from "../constants/apiEndpoints"; // Adjust the path as needed
-import { useNavigate } from "react-router";
-import CustBut from "../components/CustBut";
+"use client"
 
-const UserInterface = () => {
-    const navigate = useNavigate();
+import React, { useEffect } from "react";
+import { API_ENDPOINTS, checkLogin } from "@/constants/apiEndpoints"; // Adjust the path as needed
+import Layout from '@/components/Layout';
+import { Button } from "@/components/ui/button";
+
+import { useRouter } from 'next/navigation';
+import Link from "next/link";
+
+import Image from 'next/image';
+import hLogo from '@/../public/humanize_logo.png';
+
+const UserInterface: React.FC = () => {
+    const router = useRouter();
 
     // Also add this to apiEndpoints?
     const handleLogout = async () => {
@@ -22,35 +30,21 @@ const UserInterface = () => {
             }
         }
     };
-
+3
     useEffect(() => {
         checkLogin().then((current_user) => {
           // Do stuff with current user obj, like get username for display
           console.log(current_user) 
           if(!current_user){
-            navigate("/");
+            router.push("/");
           }
         })
       });
     
 
     return (
-        <div
-            style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: "100vh",
-                gap: "1rem",
-                backgroundColor: "#E7FFE4",
-            }}
-        >
-            <img
-                src="/humanize_logo.png"
-                alt="Logo"
-                style={{ width: "150px", marginBottom: "2rem" }}
-            />
+        <Layout>
+            <Image src={hLogo} alt="Humanize Logo" style={{ width: "150px", marginBottom: "2rem" }}/>
             <h1 style={{ fontSize: "3rem", fontWeight: "bold", margin: 0 }}>
                 Humanize
             </h1>
@@ -64,12 +58,25 @@ const UserInterface = () => {
                 AI Among Us
             </h2>
 
-            // TODO: add name of logged in player?
-            <CustBut text="Play" navLoc="/play" />
-            <CustBut text="About" navLoc="/about"/>
-            <CustBut text="Logout" navLoc="/" onClick={handleLogout}/>
-        </div>
+            
+            <Button asChild>
+                <Link href="/play">Play</Link>
+            </Button>
+            <Button asChild>
+                <Link href="/about">About</Link>
+            </Button>
+            <Button asChild>
+                <Link href="/logout">Logout</Link>
+            </Button>
+            
+
+        </Layout>
     );
 }
 
 export default UserInterface
+
+
+// <CustBut text="Play" navLoc="/play" />
+// <CustBut text="About" navLoc="/about"/>
+// <CustBut text="Logout" navLoc="/" onClick={handleLogout}/>

@@ -1,12 +1,27 @@
+"use client"
+
 import React, { useState } from "react";
 // Adjust the import path to your actual file location:
-import { API_ENDPOINTS } from "../constants/apiEndpoints";
+import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 
 // 1. Import the SyntaxHighlighter components/styles you like:
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
+import { useRouter } from 'next/navigation';
+
 function Debugger() {
+  const router = useRouter();
+  const isDeveloper = () => {
+    // Only developers with this "secret" key can access
+    return localStorage.getItem("devSecret") === "letMeIn";
+  };
+
+  // TODO: fix error when going w/o dev secret
+  if(!isDeveloper()) {
+    router.push("/");
+  }
+
   const [username, setUsername] = useState("");
   const [room, setRoom] = useState("");
   const [log, setLog] = useState<string[]>([]);

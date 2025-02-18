@@ -1,26 +1,15 @@
 import React from 'react';
+import Layout from '@/components/Layout';
+import Image from 'next/image';
+import hLogo from '@/../public/humanize_logo.png';
 
 //TODO: Fix the spacing to make it look better, maybe make the text more uniform so it looks better
 //TODO: Add a button to go back to the main page
 
-const About = () => {
+const About: React.FC = () => {
     return (
-        <div
-            style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: "100vh",
-                gap: "1rem",
-                backgroundColor: "#E7FFE4",
-            }}
-        >
-            <img
-                src="/humanize_logo.png"
-                alt="Logo"
-                style={{ width: "150px", marginBottom: "2rem" }}
-            />
+        <Layout>
+            <Image src={hLogo} alt="Humanize Logo" style={{ width: "150px", marginBottom: "2rem" }}/>
             <h1 style={{ fontSize: "3rem", fontWeight: "bold", margin: 0 }}>
                 Humanize
             </h1>
@@ -43,7 +32,7 @@ const About = () => {
             <p>If the AI gets voted out, the humans win.</p>
             <p>If there is an AI among the last 2 players, the AI wins.</p>
             <p><strong>Do not let the AI take over humanity!</strong></p>
-        </div>
+        </Layout>
     )
 }
 

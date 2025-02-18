@@ -1,18 +1,24 @@
+"use client"
+
 import React, { useState, useEffect } from "react";
 import { API_ENDPOINTS, checkLogin } from "../constants/apiEndpoints"; 
-import { useNavigate } from "react-router";
+import Layout from "@/components/Layout";
+import { useRouter } from "next/navigation";
+
+import Image from 'next/image';
+import hLogo from '@/../public/humanize_logo.png';
 
 const Registration = () => {
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
-  const navigate = useNavigate();
+  const router = useRouter();
 
   useEffect(() => {
     checkLogin().then((current_user) => {
       // Do stuff with current user obj, like get username for display
       console.log(current_user) 
       if(current_user){
-        navigate("/home");
+        router.push("/home");
       }
     })
   });
@@ -37,7 +43,7 @@ const Registration = () => {
 
       if (res.ok) {
         // If registration is successful, navigate to homepage
-        navigate("/home");
+        router.push("/home");
       } else {
         setError(data.message || "Registration failed");
       }
@@ -47,21 +53,8 @@ const Registration = () => {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "100vh",
-        backgroundColor: "#E7FFE4",
-      }}
-    > 
-      <img
-        src="/humanize_logo.png"
-        alt="Logo"
-        style={{ width: "150px", marginBottom: "2rem" }}
-      /> 
+    <Layout>
+      <Image src={hLogo} alt="Humanize Logo" style={{ width: "150px", marginBottom: "2rem" }}/>
       <h1 style={{ fontSize: "3rem", fontWeight: "bold", margin: 0 }}>
         Humanize
       </h1>
@@ -125,7 +118,7 @@ const Registration = () => {
           </div>
         )}
       </div>
-    </div>
+    </Layout>
   );
 };
 
