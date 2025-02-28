@@ -1,8 +1,8 @@
 // src/constants/apiEndpoints.ts
 
 // Base API URL - defined in .env file
-const BASE_API_URL = 'https://f92b-23-162-40-58.ngrok-free.app/api'
-//const BASE_API_URL = 'http://127.0.0.1:5000/api';
+//const BASE_API_URL = 'https://f92b-23-162-40-58.ngrok-free.app/api'
+const BASE_API_URL = 'http://127.0.0.1:5000/api';
 
 // API Endpoint Definitions
 export const API_ENDPOINTS = {
@@ -30,22 +30,49 @@ export const dynamicAPIEndpoints = {
   GET_SESSION_BY_ID: (sessionId) => `${API_ENDPOINTS.LOBBY.SESSIONS}/${sessionId}`,
 };
 
-export const checkLogin = async () =>{
+// Helper function to fetch and return data.content
+const fetchData = async (url) => {
   try {
-    const res = await fetch(API_ENDPOINTS.LOBBY.BASE, {
+    const res = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
     });
-
-    if (res.ok){
+    if (res.ok) {
       const data = await res.json();
-      return data.content
-    } else {
-      return null;
+      return data.content;
     }
+    return null;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     console.log("Network error. Please try again later.");
+    return null;
   }
-}
+};
+
+// Helper function to send data and return data.content
+const sendData = async (url, data, method = "POST") => {
+  try {
+    const res = await fetch(url, {
+      method: method, // Allow different HTTP methods
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data), // Convert data to JSON
+    });
+
+    if (res.ok) {
+      const responseData = await res.json();
+      return responseData.content;
+    }
+    return null;
+  } catch (error) {
+    console.error(error);
+    console.log("Network error. Please try again later.");
+    return null;
+  }
+};
+
+
+export const checkLogin = () => fetchData(API_ENDPOINTS.LOBBY.BASE);
+export const getSessions = () => fetchData(API_ENDPOINTS.LOBBY.SESSIONS);
+export const getSessionByID = (id) => fetchData(dynamicAPIEndpoints.GET_SESSION_BY_ID(id));

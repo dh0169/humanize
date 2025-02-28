@@ -122,6 +122,17 @@ def list_lobby():
             jsonify(status='ok', message='Available sessions', content=content),
             HTTPStatus.OK,
         )
+    
+@bp.route("/lobby/sessions/<sesh_id>", methods=["GET"])
+@handle_db_errors
+def get_sess_by_id(sesh_id):
+    with db_session() as db:
+        tmp_sesh = db.query(SessionModel).filter_by(id=sesh_id).one_or_none()        
+        return (
+            jsonify(status='ok', message='Available sessions', content=tmp_sesh.to_dict() if tmp_sesh else None),
+            HTTPStatus.OK,
+        )
+
 
 @bp.route("/lobby/users", methods=["GET"])
 @handle_db_errors

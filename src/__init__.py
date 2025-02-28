@@ -56,7 +56,7 @@ def create_app(debug=False):
 		db.query(UserModel).update({ UserModel.state : UserState.WAITING})
 	
 
-	CORS(app, supports_credentials=True, origins=['http://localhost:3000', 'http://127.0.0.1:3000'])
+	CORS(app, supports_credentials=True, origins=['*'])
 	
 	socketio.init_app(app, async_model="eventlet")
 

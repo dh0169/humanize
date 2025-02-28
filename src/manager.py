@@ -40,7 +40,7 @@ class SessionManager():
         send_server_message_with_delay(sockio=socketio, session_id=session_id, room=session_room, message="Session is starting in 5s...", delay=5)
         socketio.sleep(5)
         
-        #Main game loop, Basically while the session is ACTIVE, do stuff.
+        #Main game loop, While session is ACTIVE, manager performs game operations(i.e read messages, query gpt, parse reponses).
         robot = RobotController(RobotType.gpt4, robot_name=robot_name)
 
         ## Run a round, rounds are indexed starting at 1##

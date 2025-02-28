@@ -16,8 +16,9 @@ Base = declarative_base()
 #       with db_session() as db:
 #           tmp_sessions = db.query(SessionModel).all() # returns all session objects
 #           tmp_user = db.query(UserModel).filter_by(id=user_id).one_or_none() # returns the object or None
-#           do stuff with the user object here, everything needs to finish here. Cant pass user object around. only the id's
-#
+#           
+#           CRUD operations on db object must happen within the db session. 
+#           Cant pass object around as its tied to db sesh. 
 
 
 def delete_by_id(id, model, delay = 0, sock = None):
