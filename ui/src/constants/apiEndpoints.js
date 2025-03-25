@@ -1,7 +1,6 @@
 // src/constants/apiEndpoints.ts
 
-// Base API URL - defined in .env file
-const BASE_API_URL = 'https://493a-173-205-93-14.ngrok-free.app/api'
+const BASE_API_URL = 'https://humanize.live/api'
 //const BASE_API_URL = 'http://127.0.0.1:5000/api';
 
 // API Endpoint Definitions
