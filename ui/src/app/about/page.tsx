@@ -1,11 +1,22 @@
+"use client"
+
 import React from 'react';
 import Image from 'next/image';
 import hLogo from '@/../public/humanize_logo.png';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
+
 
 //TODO: Fix the spacing to make it look better, maybe make the text more uniform so it looks better
 //TODO: Add a button to go back to the main page
 
 const About: React.FC = () => {
+    const router = useRouter();
+
+    const handleBack = () => {
+        router.push('/home'); // Navigates back to the home page
+    };
+
     return (
         <div className="flex flex-col items-center justify-center min-h-screen gap-4">
             <Image src={hLogo} alt="Humanize Logo" style={{ width: "150px", marginBottom: "2rem" }}/>
@@ -28,6 +39,13 @@ const About: React.FC = () => {
             <p>If the AI gets voted out, the humans win.</p>
             <p>If there is an AI among the last 2 players, the AI wins.</p>
             <p><strong>Do not let the AI take over humanity!</strong></p>
+            <button 
+                onClick={handleBack} 
+                className="absolute top-4 left-4 p-2 rounded-full hover:bg-gray-100 transition"
+                aria-label="Back to Home"
+            >
+                <ArrowLeft size={48} />
+            </button>
         </div>
     )
 }
