@@ -13,7 +13,7 @@ MAX_USERNAME_SIZE = 30
 
 @bp.route("/")
 def index():
-    return jsonify(status='ok', message='humanize api is up'), HTTPStatus.OK
+    return jsonify(status='ok', message='Hi there:)'), HTTPStatus.OK
 
 
 @bp.route("/lobby", methods=["GET", "POST"])
@@ -54,8 +54,7 @@ def lobby():
                 
             if room_joined:
                 content = {
-                    "data":{"room": room_joined},
-                    "status":'ok',
+                    "room": room_joined,
                     "ws":WS_URL
                 }
                 return ( 
@@ -83,8 +82,7 @@ def lobby():
             room_joined, msg = session_manager.create_session(host_id=user_id, room=room, sock=socketio)
             if(room_joined):
                 content = {
-                    "data":{"room": room_joined},
-                    "status":'ok',
+                    "room": room_joined,
                     "ws":WS_URL
                 }
                 return ( 
@@ -125,7 +123,7 @@ def list_lobby():
     
 @bp.route("/lobby/sessions/<sesh_id>", methods=["GET"])
 @handle_db_errors
-def get_sess_by_id(sesh_id : int):
+def get_sess_by_id(sesh_id):
     with db_session() as db:
         tmp_sesh = db.query(SessionModel).filter_by(id=sesh_id).one_or_none()        
         return (
