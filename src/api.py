@@ -125,7 +125,7 @@ def list_lobby():
     
 @bp.route("/lobby/sessions/<sesh_id>", methods=["GET"])
 @handle_db_errors
-def get_sess_by_id(sesh_id):
+def get_sess_by_id(sesh_id : int):
     with db_session() as db:
         tmp_sesh = db.query(SessionModel).filter_by(id=sesh_id).one_or_none()        
         return (

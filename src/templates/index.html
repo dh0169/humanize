@@ -1,134 +1,388 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Humanize - AI Among Us</title>
-    <style>
-        body {
-            background-color: #121212;
-            color: #e0e0e0;
-            font-family: sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            height: 100vh;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .container {
-            text-align: center;
-            padding: 20px;
-        }
-
-        h1 {
-            font-size: 2em;
-            font-weight: normal;
-            margin-bottom: 30px;
-        }
-
-        .code-window {
-            background-color: #1e1e1e;
-            color: #c5c5c5;
-            padding: 20px;
-            border-radius: 8px;
-            display: inline-block;
-            text-align: left;
-            margin-top: 20px;
-            position: relative;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-            font-family: monospace;
-        }
-
-        .code-header {
-            display: flex;
-            gap: 8px;
-            position: absolute;
-            top: 12px;
-            left: 16px;
-        }
-
-        .code-header .circle {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-
-        .code-header .red {
-            background-color: #ff5f56;
-        }
-
-        .code-header .yellow {
-            background-color: #ffbd2e;
-        }
-
-        .code-header .green {
-            background-color: #27c93f;
-        }
-
-        .copy-button {
-            position: absolute;
-            top: 12px;
-            right: 16px;
-            background: none;
-            border: none;
-            color: #c5c5c5;
-            cursor: pointer;
-            font-size: 0.9em;
-            padding: 5px;
-        }
-
-        .copy-button:hover {
-            color: #ffffff;
-        }
-
-        .code-content {
-            margin-top: 40px; /* Adjust to create space for header */
-        }
-
-        pre {
-            margin: 0;
-            font-family: monospace;
-            font-size: 1em;
-        }
-
-        .footer {
-            margin-top: 50px;
-            font-size: 0.8em;
-            color: #757575;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Humanize - AI Among Us</title>
+  <!-- Responsive viewport -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Humanize - AI Among Us is a fun, casual multiplayer game where you and four strangers enter a chatroom—can you spot the secret AI imposter?">
+  <meta name="keywords" content="Humanize, AI Among Us, Multiplayer Game, Chat Game, AI, Dev Team, Fun Game">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://humanize.live">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://humanize.live">
+  <meta property="og:title" content="Humanize - AI Among Us">
+  <meta property="og:description" content="Join a chatroom with 5 players where one is a secret AI. Can you catch the imposter?">
+  <!-- Replace the content of the og:image with your actual share image -->
+  <meta property="og:image" content="https://humanize.live/assets/og-image.png">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://humanize.live">
+  <meta name="twitter:title" content="Humanize - AI Among Us">
+  <meta name="twitter:description" content="A fun multiplayer game where 5 players join a chat room with one secret AI imposter—can you spot it?">
+  <meta name="twitter:image" content="https://humanize.live/assets/og-image.png">
+  
+  <style>
+    /* Base styles */
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #121212;
+      color: #ffffff;
+      font-family: sans-serif;
+      scroll-behavior: smooth;
+    }
+    
+    /* Navbar styles */
+    header.navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 95%;
+      background-color: rgba(18, 18, 18, 0.9);
+      backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .logo {
+      font-weight: bold;
+      font-size: 1.5em;
+      color: #ffffff;
+      text-decoration: none;
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .nav-links a {
+      color: #e0e0e0;
+      text-decoration: none;
+      transition: color 0.3s ease;
+      font-size: 1rem;
+    }
+    
+    .nav-links a:hover {
+      color: #ffffff;
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    }
+    
+    /* Each section occupies full viewport height */
+    section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      padding-top: 70px; /* Account for navbar */
+    }
+    
+    /* Center island container */
+    .container {
+      max-width: 1000px;
+      width: 90%;
+      margin: 0 auto;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 1s ease, transform 1s ease;
+    }
+    
+    .container.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      color: #ffffff;
+    }
+    
+    p {
+      font-size: 1.2em;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      color: #e0e0e0;
+    }
+    
+    a.cta {
+      text-decoration: none;
+      color: #ffffff;
+      font-size: 1.2em;
+      border: 2px solid #ffffff;
+      padding: 10px 20px;
+      border-radius: 4px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    a.cta:hover {
+      background-color: #ffffff;
+      color: #121212;
+    }
+    
+    /* Game cards */
+    .games-cards {
+      display: flex;
+      flex-direction: row;
+      gap: 40px;
+      margin-top: 40px;
+    }
+    
+    .game-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 20px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .game-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .game-card img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+    
+    .game-card h2 {
+      color: #ffffff;
+      margin-bottom: 10px;
+    }
+    
+    /* Developer profiles */
+    .dev-profiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 30px;
+      margin-top: 40px;
+    }
+    
+    .dev-profile {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      transition: transform 0.3s ease;
+      display: block;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    
+    .dev-profile:hover {
+      transform: translateY(-5px);
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .dev-profile img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 15px;
+      border: 3px solid #ffffff;
+    }
+    
+    .dev-profile h3 {
+      margin: 10px 0 5px;
+      color: #ffffff;
+    }
+    
+    .dev-profile p {
+      font-size: 0.9em;
+      margin: 5px 0;
+      color: #cccccc;
+    }
+    
+    .dev-profile .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 15px;
+    }
+    
+    .dev-profile .social-icon {
+      color: #e0e0e0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.1);
+      margin: 0 auto;
+    }
+    
+    /* Footer styles */
+    footer.footer {
+      text-align: center;
+      font-size: 0.8em;
+      color: #999999;
+      padding: 10px 0;
+    }
+    
+    /* Responsive adjustments */
+    @media (min-width: 768px) {
+      .game-card {
+        flex-direction: row;
+        text-align: left;
+        gap: 20px;
+      }
+      
+      .game-card img {
+        width: 40%;
+        margin-bottom: 0;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Humanize - AI Among Us</h1>
-        <div class="code-window">
-            <div class="code-header">
-                <div class="circle red"></div>
-                <div class="circle yellow"></div>
-                <div class="circle green"></div>
-            </div>
-            <button class="copy-button" onclick="copyToClipboard()">Copy</button>
-            <div class="code-content">
-                <pre><code id="code-text">git clone https://github.com/dh0169/humanize</code></pre>
-            </div>
-        </div>
-        <div class="footer">© 2024 Humanize.live. All rights reserved.</div>
-    </div>
+  <!-- Navbar -->
+  <header class="navbar">
+    <a href="#hero" class="logo">Humanize</a>
+    <nav class="nav-links">
+      <a href="#hero">home</a>
+      <a href="#games">about</a>
+      <a href="#team">team</a>
+    </nav>
+  </header>
 
-    <script>
-        function copyToClipboard() {
-            var codeText = document.getElementById("code-text").innerText;
-            navigator.clipboard.writeText(codeText).then(function() {
-                var copyButton = document.querySelector(".copy-button");
-                copyButton.textContent = "Copied!";
-                setTimeout(function() {
-                    copyButton.textContent = "Copy";
-                }, 2000);
-            }, function(err) {
-                console.error('Could not copy text: ', err);
-            });
+  <main>
+    <!-- Hero Section -->
+    <section id="hero">
+      <div class="container">
+        <h1>Humanize - AI Among Us 🤖</h1>
+        <p>You and 4 strangers enter a chatroom. Can you spot the imposter?</p>
+        <p><a class="cta" href="#">Play Now</a></p>
+      </div>
+    </section>
+
+    <!-- Games/About Section -->
+    <section id="games">
+      <div class="container">
+        <h1>About Humanize - AI Among Us</h1>
+        <p><strong>Humanize - AI Among Us</strong> is a fun, casual multiplayer game where 5 players hop into a chat room—but there's a twist: one of you is secretly an AI! Work together, chat, and figure out who's the sneaky robot in disguise. Think you can uncover the imposter before time runs out?</p>
+        <div class="games-cards">
+          <div class="game-card">
+            <div class="game-card-content">
+              <h2>🤝 4 Humans vs 1 AI</h2>
+              <p>Five players join a chat room, but one is secretly a robot. Team up to spot the impostor!</p>
+            </div>
+          </div>
+          <div class="game-card">
+            <div class="game-card-content">
+              <h2>🤖 AI-powered Fun</h2>
+              <p>The AI can chat like a real person—are you sharp enough to catch it blending in?</p>
+            </div>
+          </div>
+          <div class="game-card">
+            <div class="game-card-content">
+              <h2>💬 Chat, Guess, Repeat</h2>
+              <p>Pay attention to subtle hints in the conversation. Can you spot the robot before it's game over?</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Team Section -->
+    <section id="team">
+      <div class="container">
+        <h1>Our Team</h1>
+        <div class="dev-profiles">
+          <a href="https://github.com/dh0169" target="_blank" class="dev-profile">
+            <img src="https://cdn.discordapp.com/avatars/1145347707913904168/60be000b7570381d609dff582f7ec371?size=1024" alt="dirtydan">
+            <h3>dirtydan</h3>
+            <p>Backend/DevOps</p>
+            <div class="social-icon">
+              <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path fill="currentColor" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+            </div>
+          </a>
+          
+          <a href="https://github.com/aokj08" target="_blank" class="dev-profile">
+            <img src="https://cdn.discordapp.com/avatars/695663567915057242/e1a3f9d677fe8836d3d0c72f91588c6f?size=1024" alt="aokj1111">
+            <h3>aokj1111</h3>
+            <p>Backend Engineer</p>
+            <div class="social-icon">
+              <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path fill="currentColor" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+            </div>
+          </a>
+          
+          <a href="https://github.com/OfficialGregJ" target="_blank" class="dev-profile">
+            <img src="https://cdn.discordapp.com/avatars/129469132444925952/fd2465e814080cb929ab3c40ca2d7a27?size=1024" alt="gregj">
+            <h3>gregj</h3>
+            <p>Frontend Engineer/Design</p>
+            <div class="social-icon">
+              <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path fill="currentColor" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+            </div>
+          </a>
+          
+          <a href="https://github.com/jrodmon" target="_blank" class="dev-profile">
+            <img src="https://cdn.discordapp.com/avatars/191089991588249600/928a2d148a0a93185176a0d3ace96929?size=1024" alt="joor">
+            <h3>joor</h3>
+            <p>Frontend Engineer/Design</p>
+            <div class="social-icon">
+              <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path fill="currentColor" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    © 2024 Humanize.live. All rights reserved.
+  </footer>
+  
+  <script>
+    // Animate containers when they enter the viewport using Intersection Observer
+    const containers = document.querySelectorAll('.container');
+    const observer = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
         }
-    </script>
+      });
+    }, { threshold: 0.5 });
+    containers.forEach(container => observer.observe(container));
+    
+    // Smooth scrolling for navbar links
+    document.querySelectorAll('.navbar a').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const targetElement = document.querySelector(this.getAttribute('href'));
+        window.scrollTo({
+          top: targetElement.offsetTop,
+          behavior: 'smooth'
+        });
+      });
+    });
+  </script>
 </body>
 </html>
