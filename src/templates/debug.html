@@ -183,25 +183,25 @@
             const username = document.getElementById('username').value;
             try {
                 const response = await axios.post(`${API_URL}/register`, { username });
-                if (response.data.did_succeed) {
-                    currentUser = response.data.data.user;
-                    showMessage(`Registered as: ${currentUser}`);
-                } else {
-                    showMessage(`Registration failed: ${response.data.message}`);
+                showMessage(JSON.stringify(response.data));
+                if (response.data.status == 'ok'){
+                    currentUser = response.data.content.user;
                 }
-            } catch (error) {
-                showMessage(`Error: ${error.response?.data?.message || error.message}`);
+            }catch (error) {
+                const errorData = error.response?.data;
+                showMessage(JSON.stringify(errorData || error.message));
             }
         }
 
         async function logout() {
             try {
                 const response = await axios.get(`${API_URL}/logout`);
-                showMessage(response.data.message);
+                showMessage(JSON.stringify(response.data));
                 currentUser = null;
                 disconnectSocket();
             } catch (error) {
-                showMessage(`Error: ${error.response?.data?.message || error.message}`);
+                const errorData = error.response?.data;
+                showMessage(JSON.stringify(errorData || error.message));
             }
         }
 
@@ -209,10 +209,13 @@
             const room = document.getElementById('roomName').value;
             try {
                 const response = await axios.post(`${API_URL}/lobby`, { type: 'join', room });
-                showMessage(`Join room response: ${JSON.stringify(response.data)}`);
-                connectSocket(response.data.ws, response.data.data.room);
-            } catch (error) {
-                showMessage(`Error: ${error.response?.data?.message || error.message}`);
+                showMessage(JSON.stringify(response.data));
+                if (response.data.status == "ok"){
+                    connectSocket(response.data.content.ws, response.data.content.room);
+                }
+            }catch (error) {
+                const errorData = error.response?.data;
+                showMessage(JSON.stringify(errorData || error.message));
             }
         }
 
@@ -220,21 +223,27 @@
             const room = document.getElementById('roomName').value;
             try {
                 const response = await axios.post(`${API_URL}/lobby`, { type: 'host', room });
-                showMessage(`Host room response: ${JSON.stringify(response.data)}`);
-                connectSocket(response.data.ws, response.data.data.room);
-            } catch (error) {
-                showMessage(`Error: ${error.response?.data?.message || error.message}`);
+                showMessage(JSON.stringify(response.data));
+                if (response.data.status == "ok"){
+                    connectSocket(response.data.content.ws, response.data.content.room);
+                }
+            }catch (error) {
+                const errorData = error.response?.data;
+                showMessage(JSON.stringify(errorData || error.message));
             }
         }
 
         async function joinRandomRoom() {
             try {
                 const response = await axios.post(`${API_URL}/lobby`, { type: 'join', random: true });
-                showMessage(`Join random room response: ${JSON.stringify(response.data)}`);
-                connectSocket(response.data.ws, response.data.data.room);
+                showMessage(JSON.stringify(response.data));
+                if (response.data.status == "ok"){
+                    connectSocket(response.data.content.ws, response.data.content.room);
+                }
 
-            } catch (error) {
-                showMessage(`Error: ${error.response?.data?.message || error.message}`);
+            }catch (error) {
+                const errorData = error.response?.data;
+                showMessage(JSON.stringify(errorData || error.message));
             }
         }
 
@@ -246,25 +255,26 @@
                 pendingList.innerHTML = '';
                 activeList.innerHTML = '';
 
-                if (response.data.pending_sessions) {
-                    response.data.pending_sessions.forEach(session => {
+                if (response.data.content.pending_sessions) {
+                    response.data.content.pending_sessions.forEach(session => {
                         const li = document.createElement('li');
                         li.textContent = JSON.stringify(session);
                         pendingList.appendChild(li);
                     });
                 }
 
-                if (response.data.active_sessions) {
-                    response.data.active_sessions.forEach(session => {
+                if (response.data.content.active_sessions) {
+                    response.data.content.active_sessions.forEach(session => {
                         const li = document.createElement('li');
                         li.textContent = JSON.stringify(session);
                         activeList.appendChild(li);
                     });
                 }
 
-                showMessage(response.data.message);
-            } catch (error) {
-                showMessage(`Error: ${error.response?.data?.message || error.message}`);
+                showMessage(JSON.stringify(response.data));
+            }catch (error) {
+                const errorData = error.response?.data;
+                showMessage(JSON.stringify(errorData || error.message));
             }
         }
 
@@ -274,17 +284,18 @@
                 const usersList = document.getElementById('usersList');
                 usersList.innerHTML = '';
 
-                if (response.data.users) {
-                    response.data.users.forEach(user => {
+                if (response.data.content) {
+                    response.data.content.forEach(user => {
                         const li = document.createElement('li');
                         li.textContent = JSON.stringify(user);
                         usersList.appendChild(li);
                     });
                 }
 
-                showMessage(response.data.message);
-            } catch (error) {
-                showMessage(`Error: ${error.response?.data?.message || error.message}`);
+                showMessage(JSON.stringify(response.data));
+            }catch (error) {
+                const errorData = error.response?.data;
+                showMessage(JSON.stringify(errorData || error.message));
             }
         }
 
@@ -358,11 +369,11 @@
         }
 
         directWebSocket = io(wsUrl, {
-            transports: ['websocket'],
-            withCredentials: true,
-            // secure: true,
-            // rejectUnauthorized: false
-        });
+                transports: ['websocket'],
+                withCredentials: true,
+                // secure: true,
+                // rejectUnauthorized: false
+            });
 
         directWebSocketRoom = roomInput;
 
