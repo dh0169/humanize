@@ -4,6 +4,9 @@
 *.db
 *.sh
 
+#macOS
+.DS_Store
+
 #Node modules
 */node_modules
 
