@@ -1,5 +1,5 @@
 # Use an official Python runtime as the base image
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 # Set the working directory in the container
 WORKDIR /var/www/html/humanize
@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # RUN ./generate_selfsigned.sh
 
 # Make port 5000 available to the world outside this container
-EXPOSE 5000
+EXPOSE 8080
 
 # Run app.py when the container launches
 CMD ["python", "main.py"]
