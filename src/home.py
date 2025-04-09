@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, session, abort
 from src.models import db_session, UserModel, SessionModel
-from src.config import auth, HUMANIZE_ADMIN, HUMANIZE_USER, WS_URL
+from src.config import auth, WS_URL
 
 bp = Blueprint("home", __name__, url_prefix="/")
 
@@ -24,10 +24,10 @@ def chat():
 @bp.route("/debug")
 @auth.login_required()
 def debug():
-    if auth.current_user() == HUMANIZE_ADMIN:
-         return render_template("debug.html")
-    else:
-         abort(401)
+    # if auth.current_user() == HUMANIZE_ADMIN:
+    return render_template("debug.html")
+    # else:
+    #      abort(401)
 
 
 

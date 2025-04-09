@@ -2,7 +2,7 @@ from src import create_app, socketio
 from dotenv import load_dotenv, find_dotenv
 import os
 
-app = create_app(debug=True)
+app = create_app(debug=False)
 
 if __name__ == '__main__':
 
@@ -12,13 +12,7 @@ if __name__ == '__main__':
         
     load_dotenv(env_path)
 
-    HOST = os.environ.get("HUMANIZE_HOST")
-    PORT = os.environ.get("HUMANIZE_PORT")
+    HOST = "0.0.0.0"
+    PORT = 8080
 
-    if not HOST:
-        HOST = "127.0.0.1"
-
-    if not PORT:
-        PORT = 5000
-
-    socketio.run(app, host=HOST, port=int(PORT))
+    socketio.run(app, host=HOST, port=int(PORT), debug=False, log_output=True)

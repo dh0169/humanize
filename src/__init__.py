@@ -13,7 +13,7 @@ from flask import Flask, redirect
 from flask_socketio import SocketIO
 from flask_cors import CORS
 from src.manager import SessionManager
-from src.config import HUMANIZE_ADMIN, HUMANIZE_ADMIN_PW, HUMANIZE_USER, HUMANIZE_USER_PW, FLASK_SECRET_KEY
+from src.config import FLASK_SECRET_KEY
 from src.models import db_session, SessionModel, UserModel, UserState
 
 from flask_httpauth import HTTPBasicAuth
