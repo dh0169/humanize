@@ -1,10 +1,12 @@
 import eventlet
-eventlet.monkey_patch(socket=False) # Need this or openAI fails
+
+eventlet.monkey_patch(socket=False)  # Need this or openAI fails
 
 from dotenv import load_dotenv, find_dotenv
+
 env_path = find_dotenv()
 if not env_path:
-	raise FileNotFoundError(".env file not found.")
+    raise FileNotFoundError(".env file not found.")
 load_dotenv(env_path)
 
 
@@ -24,40 +26,40 @@ session_manager = SessionManager()
 
 
 def create_app(debug=False):
-	"""Create an application."""
+    """Create an application."""
 
-	app = Flask(__name__)
+    app = Flask(__name__)
 
-	app.config.from_mapping(
-		SECRET_KEY = FLASK_SECRET_KEY,
-		DEBUG = debug,
-		SESSION_COOKIE_SAMESITE='lax',   # Allows cross-site cookies
-		#SESSION_COOKIE_SECURE=True,  
-	)
-	
-	
+    app.config.from_mapping(
+        SECRET_KEY=FLASK_SECRET_KEY,
+        DEBUG=debug,
+        SESSION_COOKIE_SAMESITE="lax",  # Allows cross-site cookies
+        # SESSION_COOKIE_SECURE=True,
+        SESSION_COOKIE_DOMAIN="localhost",
+    )
 
-	from .home import bp as home_blueprint
-	app.register_blueprint(home_blueprint)
+    from .home import bp as home_blueprint
 
-	from .chat import bp as chat_blueprint
-	app.register_blueprint(chat_blueprint)
+    app.register_blueprint(home_blueprint)
 
-	from .api import bp as api_blueprint
-	app.register_blueprint(api_blueprint)
-	
-	@app.errorhandler(404)
-	def not_found(e):
-		return redirect("/")
+    from .chat import bp as chat_blueprint
 
+    app.register_blueprint(chat_blueprint)
 
-	with db_session() as db:
-		db.query(SessionModel).delete()
-		db.query(UserModel).update({ UserModel.state : UserState.WAITING})
-	
+    from .api import bp as api_blueprint
 
-	CORS(app, supports_credentials=True, origins=['*'])
-	
-	socketio.init_app(app, async_model="eventlet")
+    app.register_blueprint(api_blueprint)
 
-	return app
+    @app.errorhandler(404)
+    def not_found(e):
+        return redirect("/")
+
+    with db_session() as db:
+        db.query(SessionModel).delete()
+        db.query(UserModel).update({UserModel.state: UserState.WAITING})
+
+    CORS(app, supports_credentials=True, origins=["*"])
+
+    socketio.init_app(app, async_model="eventlet")
+
+    return app

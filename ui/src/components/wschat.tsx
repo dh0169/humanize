@@ -160,8 +160,8 @@ const setupSocketConnection = (wsUrl: string, roomId: string, username: string):
  * ChatComponent - Manages the WebSocket connection for chat functionality.
  */
 const ChatComponent: React.FC<ChatComponentProps> = ({ username }) => {
-  const wsUrl = "humanize.live/api/chat";
-  const roomId = "gregtest";
+  const wsUrl = ":8080/chat";
+  const roomId = "";
 
   // State management
   const [messages, setMessages] = useState<ClientMessage[]>([]);
