@@ -30,8 +30,8 @@ def create_app(debug=False):
     app.config.from_mapping(
         SECRET_KEY=FLASK_SECRET_KEY,
         DEBUG=debug,
-        SESSION_COOKIE_SAMESITE="None",  # Allows cross-site cookies
-        SESSION_COOKIE_SECURE=True,
+#        SESSION_COOKIE_SAMESITE="None",  # Allows cross-site cookies
+#        SESSION_COOKIE_SECURE=True,
     )
 
     from .home import bp as home_blueprint
