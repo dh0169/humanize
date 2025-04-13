@@ -58,7 +58,11 @@ def create_app(debug=False):
         db.query(SessionModel).delete()
         db.query(UserModel).update({UserModel.state: UserState.WAITING})
 
-    CORS(app, supports_credentials=True, origins=["*"])
+    CORS(
+        app,
+        supports_credentials=True,
+        origins=["localhost:3000", "https://humanize.live/"],
+    )
 
     socketio.init_app(app, async_model="eventlet")
 
