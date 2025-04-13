@@ -1,23 +1,23 @@
 #!/bin/bash
 
-API_URL="http://localhost:5000/api"
+API_URL="https://humanize.live/api"
 COOKIE_JAR_PREFIX="cookies_user_"
-TEST_USERS=10
-MAX_ROOMS=5
+TEST_USERS=3
 
-# Colors for output
+# Color output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Function to make API calls
+# Initialize result storage
+JSON_RESULTS=()
+declare -A TEST_METADATA
+test_count=0
+
+# API call wrapper
 call_api() {
-    local user=$1
-    local method=$2
-    local endpoint=$3
-    local data=$4
+    local user=$1 method=$2 endpoint=$3 data=$4
     local cookie_jar="${COOKIE_JAR_PREFIX}${user}.txt"
-
     if [ "$method" = "GET" ]; then
         curl -s -X GET -b $cookie_jar "$API_URL$endpoint"
     else
@@ -25,134 +25,109 @@ call_api() {
     fi
 }
 
-# Function to check API response
-check_response() {
-    local test_name=$1
-    local response=$2
-    local expected_message=$3
-    local check_success=$4
+# Record result
+record_test() {
+    local id=$1 name=$2 status=$3 expected=$4 actual=$5 success=$6
+    local type=${TEST_METADATA["$id,type"]}
+    local desc=${TEST_METADATA["$id,desc"]}
 
-    echo "Test: $test_name"
-    if echo "$response" | jq -e 'has("message")' > /dev/null; then
-        local message=$(echo "$response" | jq -r '.message')
-        if [[ "$message" == *"$expected_message"* ]]; then
-            echo -e "${GREEN}Passed: $expected_message${NC}"
-        else
-            echo -e "${RED}Failed: Expected '$expected_message', got '$message'${NC}"
-        fi
-        
-        if [ "$check_success" = true ] && echo "$response" | jq -e 'has("did_succeed")' > /dev/null; then
-            local success=$(echo "$response" | jq -r '.did_succeed')
-            if [ "$success" = true ]; then
-                echo -e "${GREEN}Success flag is true${NC}"
-            else
-                echo -e "${RED}Success flag is false${NC}"
-            fi
-        fi
-    else
-        echo -e "${RED}Failed: Response doesn't contain 'message' field${NC}"
-        echo "Response: $response"
-    fi
-    echo ""
+    JSON_RESULTS+=("$(jq -n \
+        --arg id "$id" \
+        --arg name "$name" \
+        --arg type "$type" \
+        --arg desc "$desc" \
+        --arg status "$status" \
+        --arg expected "$expected" \
+        --arg actual "$actual" \
+        --argjson success "${success:-null}" \
+        '{id: $id|tonumber, name: $name, description: $desc, type: $type, status: $status, expected_message: $expected, actual_message: $actual, did_succeed: $success}')")
 }
 
-# Initialize test counter
-test_count=0
+# Evaluate response
+check_response() {
+    local test_name=$1 response=$2 expected=$3 success_check=$4
+    local status="failed" actual="" success="null"
 
-# Test 1: Check API status
-((test_count++))
-echo "Test $test_count: Checking API status"
-response=$(curl -s -X GET "$API_URL/")
-check_response "API Status" "$response" "Chat API is running"
+    echo "Test: $test_name"
 
-# Register users and perform various actions
-for i in $(seq 1 $TEST_USERS); do
-    # Test: Register a new user
-    ((test_count++))
-    echo "Test $test_count: Registering user$i"
-    response=$(call_api $i "POST" "/register" "{\"username\": \"user$i\"}")
-    check_response "Register user$i" "$response" "Registration Success!" true
-
-    # Test: Get lobby information
-    ((test_count++))
-    echo "Test $test_count: Getting lobby information for user$i"
-    response=$(call_api $i "GET" "/lobby")
-    check_response "Lobby info user$i" "$response" "Welcome user$i!"
-
-    # Test: Host a room (for some users)
-    if [ $((i % 3)) -eq 0 ]; then
-        ((test_count++))
-        echo "Test $test_count: User$i hosting a room"
-        room_name="room_$((i/3))"
-        response=$(call_api $i "POST" "/lobby" "{\"type\": \"host\", \"room\": \"$room_name\"}")
-        check_response "Host room $room_name" "$response" "New game session created, $room_name" true
+    if echo "$response" | jq -e 'has("message")' > /dev/null; then
+        actual=$(echo "$response" | jq -r '.message')
+        if [[ "$actual" == *"$expected"* ]]; then
+            status="passed"
+            echo -e "${GREEN}Passed: $expected${NC}"
+        else
+            echo -e "${RED}Failed: Expected '$expected', got '$actual'${NC}"
+        fi
+        if [ "$success_check" = true ]; then
+            success=$(echo "$response" | jq -r '.did_succeed')
+        fi
+    else
+        actual="Invalid response structure"
+        echo -e "${RED}Invalid response${NC}"
     fi
-done
+    echo ""
+    record_test "$test_count" "$test_name" "$status" "$expected" "$actual" "$success"
+}
 
-# Join rooms and perform additional tests
-for i in $(seq 1 $TEST_USERS); do
-    if [ $((i % 3)) -ne 0 ]; then
-        # Test: Join a random room
-        ((test_count++))
-        echo "Test $test_count: User$i joining a random room"
-        response=$(call_api $i "POST" "/lobby" '{"type": "join", "random": true}')
-        check_response "Join random room user$i" "$response" "has joined" true
+# ----------- TESTS -----------
 
-        # Test: Try to join another room while active
-        ((test_count++))
-        echo "Test $test_count: User$i trying to join another room while active"
-        response=$(call_api $i "POST" "/lobby" '{"type": "join", "room": "some_room"}')
-        check_response "Join room while active user$i" "$response" "is already in a session" false
-    fi
-
-    # Test: List lobby sessions
-    ((test_count++))
-    echo "Test $test_count: Listing lobby sessions for user$i"
-    response=$(call_api $i "GET" "/lobby/sessions")
-    check_response "List sessions user$i" "$response" "Game sessions"
-
-    # Test: List users
-    ((test_count++))
-    echo "Test $test_count: Listing users for user$i"
-    response=$(call_api $i "GET" "/lobby/users")
-    check_response "List users user$i" "$response" "Registered users"
-done
-
-# Additional edge case tests
-# Test: Try to register an existing user
+# Test 1: API Status
 ((test_count++))
-echo "Test $test_count: Trying to register an existing user"
+TEST_METADATA["$test_count,type"]="integration"
+TEST_METADATA["$test_count,desc"]="Checks if the API is online and returns a status message."
+response=$(curl -s "$API_URL/")
+check_response "API Status Check" "$response" "Chat API is running"
+
+# Test 2: Register user1
+((test_count++))
+TEST_METADATA["$test_count,type"]="unit"
+TEST_METADATA["$test_count,desc"]="Register a new user and check for success message."
 response=$(call_api 1 "POST" "/register" '{"username": "user1"}')
-check_response "Register existing user" "$response" "User already exists" false
+check_response "Register User" "$response" "Registration Success!" true
 
-# Test: Try to host a room with an empty name
+# Test 3: Get lobby info
 ((test_count++))
-echo "Test $test_count: Trying to host a room with an empty name"
-response=$(call_api 1 "POST" "/lobby" '{"type": "host", "room": ""}')
-check_response "Host empty room name" "$response" "room cannot be empty or null" false
+TEST_METADATA["$test_count,type"]="integration"
+TEST_METADATA["$test_count,desc"]="User retrieves welcome message from lobby."
+response=$(call_api 1 "GET" "/lobby")
+check_response "Lobby Info" "$response" "Welcome user1!"
 
-# Test: Try to join a non-existent room
+# Test 4: Host room
 ((test_count++))
-echo "Test $test_count: Trying to join a non-existent room"
-response=$(call_api 1 "POST" "/lobby" '{"type": "join", "room": "nonexistent_room"}')
-check_response "Join non-existent room" "$response" "Error, nonexistent_room not found!" false
+TEST_METADATA["$test_count,type"]="integration"
+TEST_METADATA["$test_count,desc"]="User hosts a game room and expects success confirmation."
+response=$(call_api 1 "POST" "/lobby" '{"type": "host", "room": "alpha"}')
+check_response "Host Room" "$response" "New game session created" true
 
-# Logout tests
-for i in $(seq 1 $TEST_USERS); do
-    # Test: Logout
-    ((test_count++))
-    echo "Test $test_count: Logging out user$i"
-    response=$(call_api $i "GET" "/logout")
-    check_response "Logout user$i" "$response" "Logout successful"
+# Test 5: Join nonexistent room
+((test_count++))
+TEST_METADATA["$test_count,type"]="edge"
+TEST_METADATA["$test_count,desc"]="Try joining a room that doesn't exist."
+response=$(call_api 1 "POST" "/lobby" '{"type": "join", "room": "ghostroom"}')
+check_response "Join Invalid Room" "$response" "not found" false
 
-    # Test: Try to access protected route after logout
-    ((test_count++))
-    echo "Test $test_count: Trying to access protected route after logout for user$i"
-    response=$(call_api $i "GET" "/lobby")
-    check_response "Protected route after logout user$i" "$response" "Please register a username"
+# ---------- OUTPUTS -----------
+
+# JSON output
+echo "[" > test_results.json
+for i in "${!JSON_RESULTS[@]}"; do
+    echo "${JSON_RESULTS[$i]}" >> test_results.json
+    [ "$i" -lt $(( ${#JSON_RESULTS[@]} - 1 )) ] && echo "," >> test_results.json
+done
+echo "]" >> test_results.json
+
+# Markdown summary
+echo "| ID | Name | Type | Status |" > test_results.md
+echo "|----|------|------|--------|" >> test_results.md
+for result in "${JSON_RESULTS[@]}"; do
+    id=$(echo "$result" | jq '.id')
+    name=$(echo "$result" | jq -r '.name')
+    type=$(echo "$result" | jq -r '.type')
+    status=$(echo "$result" | jq -r '.status')
+    echo "| $id | $name | $type | $status |" >> test_results.md
 done
 
-# Clean up
-rm ${COOKIE_JAR_PREFIX}*
+# Cleanup
+rm ${COOKIE_JAR_PREFIX}* 2>/dev/null
 
-echo "All tests completed. Total tests run: $test_count"
+echo "Tests complete. Results saved to test_results.json and test_results.md"

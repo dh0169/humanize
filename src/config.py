@@ -11,6 +11,8 @@ FLASK_SECRET_KEY = os.environ.get("SECRET_KEY")
 HUMANIZE_ADMIN = os.environ.get("HUMANIZE_ADMIN")
 HUMANIZE_ADMIN_PW = os.environ.get("HUMANIZE_ADMIN_PW")
 
+HUMANIZE_ORIGINS = os.environ.get("HUMANIZE_ORIGINS", ["localhost:3000", "https://humanize.live/"])
+
 
 auth = HTTPBasicAuth()
 

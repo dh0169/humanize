@@ -15,13 +15,10 @@ from flask import Flask, redirect
 from flask_socketio import SocketIO
 from flask_cors import CORS
 from src.manager import SessionManager
-from src.config import FLASK_SECRET_KEY
+from src.config import FLASK_SECRET_KEY, HUMANIZE_ORIGINS
 from src.models import db_session, SessionModel, UserModel, UserState
 
-from flask_httpauth import HTTPBasicAuth
-from werkzeug.security import check_password_hash, generate_password_hash
-
-socketio = SocketIO(cors_allowed_origins="*")
+socketio = SocketIO(cors_allowed_origins=HUMANIZE_ORIGINS)
 session_manager = SessionManager()
 
 
@@ -35,7 +32,7 @@ def create_app(debug=False):
         DEBUG=debug,
         SESSION_COOKIE_SAMESITE="lax",  # Allows cross-site cookies
         # SESSION_COOKIE_SECURE=True,
-        SESSION_COOKIE_DOMAIN="localhost",
+        #SESSION_COOKIE_DOMAIN="localhost",
     )
 
     from .home import bp as home_blueprint
@@ -61,7 +58,7 @@ def create_app(debug=False):
     CORS(
         app,
         supports_credentials=True,
-        origins=["localhost:3000", "https://humanize.live/"],
+        origin=HUMANIZE_ORIGINS,
     )
 
     socketio.init_app(app, async_model="eventlet")
