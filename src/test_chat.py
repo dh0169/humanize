@@ -1,38 +1,39 @@
-# test_chat.py
 import pytest
-from flask import Flask, session
-from src import socketio 
-from src.models import db_session, UserModel, SessionModel, UserState
-from dotenv import load_dotenv, find_dotenv
+from src import create_app, socketio
 
-env_path = find_dotenv()
-if not env_path:
-    raise FileNotFoundError(".env file not found.")
-        
-load_dotenv(env_path)
+
+USER = 'testregisteruser7'
+ROOM = f'{USER}_room'
+
 
 @pytest.fixture
 def app():
-    from src import create_app, socketio
-    app = create_app(debug=False)
-    return app  
+    app_instance = create_app()
+    return app_instance
 
-@pytest.fixture
-def client(app):
-    return socketio.test_client(app, namespace='/chat')
+def test_api_root(app):
+    test_client = app.test_client()
+    response = test_client.get('/api/')
+    print(response.json)
 
-@pytest.fixture
-def with_user(client, app):
-    with client.flask_test_client.session_transaction() as sess:
-        sess['user'] = 1  
-    return client
+def test_user_and_room(app):
+    test_client = app.test_client()
+    response = test_client.post('/api/register', json={'username': USER})
+    print(response.json)
+    assert response.json['status'] == 'ok', "User register failed"
 
-def test_handle_connect_updates_state(with_user):
-    client = with_user
-    connected = client.connect(namespace='/chat')
-    assert connected is True
+    response = test_client.post('/api/lobby', json={'type': 'host', 'room': ROOM})
+    print(response.json)
+    assert response.json['content'] is not None, "Room host failed"
 
-    # Optionally: Check server emitted any messages
-    messages = client.get_received('/chat')
-    print(messages)
 
+    #Test websockets here
+
+    websockets_client = socketio.test_client(app)
+    websockets_client.emit('join', json={'room' : 'testhostsession', 'username' : 'testregisterus'})
+
+
+
+    test_client.get('/api/logout')
+
+   
