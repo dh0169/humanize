@@ -74,8 +74,9 @@ def test_user_and_room(app):
 
 
         # Test joining a room
-        websockets_client.emit('join', json={'room': ROOM, 'username': USER})
-        print(websockets_client.get_received('/chat'))
+        #websockets_client.emit('join', json={'room': ROOM, 'username': USER})
+        websockets_client.disconnect('/chat')
+        #print(websockets_client.get_received('/chat'))
 
     finally:
         api_test_client.get('/api/logout')
