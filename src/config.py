@@ -11,14 +11,6 @@ FLASK_SECRET_KEY = os.environ.get("SECRET_KEY")
 HUMANIZE_ADMIN = os.environ.get("HUMANIZE_ADMIN")
 HUMANIZE_ADMIN_PW = os.environ.get("HUMANIZE_ADMIN_PW")
 
-HUMANIZE_TESTER1 = os.environ.get("HUMANIZE_TESTER1")
-HUMANIZE_TESTER1_PW = os.environ.get("HUMANIZE_TESTER1_PW")
-
-HUMANIZE_TESTER2 = os.environ.get("HUMANIZE_TESTER2")
-HUMANIZE_TESTER2_PW = os.environ.get("HUMANIZE_TESTER2_PW")
-
-HUMANIZE_TESTER3 = os.environ.get("HUMANIZE_TESTER3")
-HUMANIZE_TESTER3_PW = os.environ.get("HUMANIZE_TESTER3_PW")
 
 
 HUMANIZE_ORIGINS = os.environ.get("HUMANIZE_ORIGINS", ["http://localhost:3000", "https://humanize.live"])
@@ -28,10 +20,7 @@ auth = HTTPBasicAuth()
 
 # if debugging
 users = {
-    HUMANIZE_ADMIN: generate_password_hash(HUMANIZE_ADMIN_PW),
-    HUMANIZE_TESTER1: generate_password_hash(HUMANIZE_TESTER1_PW),
-    HUMANIZE_TESTER2: generate_password_hash(HUMANIZE_TESTER2_PW),
-    HUMANIZE_TESTER3: generate_password_hash(HUMANIZE_TESTER3_PW)
+    HUMANIZE_ADMIN: generate_password_hash(HUMANIZE_ADMIN_PW)
 }
 
 
