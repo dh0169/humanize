@@ -5,7 +5,7 @@ from src.models import UserModel, UserState, SessionState, SessionModel, db_sess
 from flask import session
 
 
-USER = 'testregisteruser7'
+USER = 'testregisteruser9'
 ROOM = f'{USER}_room'
 
 
@@ -28,7 +28,7 @@ def websockets_client(app, api_test_client):
     assert ws_client.is_connected('/chat')
     return ws_client
 
-def test_handle_connect(websockets_client, api_test_client):    
+def test_handle_connect_disconnect(websockets_client, api_test_client):    
     try:
         # Connect to chat
         websockets_client.connect('/chat')
@@ -62,6 +62,14 @@ def test_handle_connect(websockets_client, api_test_client):
             tmp_user = db.query(UserModel).filter_by(id=user_id).one_or_none()
             assert tmp_user.state == UserState.ACTIVE, f"Expected ACTIVE, got {tmp_user.state}"
         
+        # Disconnect from chat
+        websockets_client.disconnect('/chat')
+        assert not websockets_client.is_connected('/chat')
+
+        # This test case tests the handling of a disconnection given the user's id.
+        with db_session() as db:
+            tmp_user = db.query(UserModel).filter_by(id=user_id).one_or_none()
+            assert tmp_user.state == UserState.DISCONNECTED, f"Expected ACTIVE, got {tmp_user.state}"
 
         # Test joining a room
         #websockets_client.emit('join', json={'room': ROOM, 'username': USER})
@@ -69,7 +77,40 @@ def test_handle_connect(websockets_client, api_test_client):
 
     finally:
         print("\nCleaning up...")
-        websockets_client.disconnect('/chat')
         api_test_client.get('/api/logout')
 
-   
+# def test_handle_join(websockets_client, api_test_client):
+#     try:
+#         # Register the user
+#         response = api_test_client.post('/api/register', json={'username': USER})
+#         print(response.json)
+#         assert response.json['status'] == 'ok', "User register failed"
+
+#         # Host a room
+#         response = api_test_client.post('/api/lobby', json={'type': 'host', 'room': ROOM})
+#         print("\nHosting room...\n")
+#         print(response.json)
+#         assert response.json['content'] is not None, "Room host failed"
+
+#         # Connect to chat now that we have a room and user
+#         websockets_client.connect('/chat')
+#         assert websockets_client.is_connected('/chat')
+
+#         # Join the room
+#         print("\nJoining room...\n")
+#         websockets_client.emit('join', json={'room': ROOM, 'username': USER})
+#         received = websockets_client.get_received('/chat')
+#         with api_test_client.session_transaction() as session:
+#             print("Received:", received)
+#             print("Session:", session)
+#             print("User ID:", session.get('user'))
+
+
+#         # assert received, "No message received after join"
+
+
+
+#     finally:
+#         print("\nCleaning up...")
+#         websockets_client.disconnect('/chat')
+#         api_test_client.get('/api/logout')
