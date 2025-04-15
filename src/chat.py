@@ -20,14 +20,12 @@ def is_registered(func):
 @socketio.on('connect', namespace='/chat')
 @is_registered
 def handle_connect():
-	user_id = session['user']
-	with db_session() as db:
-		tmp_user = db.query(UserModel).filter_by(id=user_id).one_or_none()
-		if tmp_user and tmp_user.session_id:
-			tmp_user.state = UserState.ACTIVE
-		elif tmp_user and not tmp_user.session_id:
-			tmp_user.state = UserState.WAITING
-			print(f"User {tmp_user.username} has disconnected!")
+    user_id = session['user']
+    with db_session() as db:
+        tmp_user = db.query(UserModel).filter_by(id=user_id).one_or_none()
+        tmp_user.state = UserState.ACTIVE
+        if tmp_user:
+            send_message(sockio=socketio, sender_name="Server", room=None, session_id=None, message=f'{tmp_user} has connected to /chat')
 
 
 @socketio.on('disconnect', namespace='/chat')
