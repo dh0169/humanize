@@ -66,6 +66,15 @@ def humanize_send_msg(username, room, msg, namespace, ws_client):
 
     return received
 
+def parse_events(namespace, ws_client):
+    received = ws_client.get_received(namespace)
+    msgs = {}
+    if received:
+        for event in received:
+            if 'name' in event:
+                msgs[event['name']] = event['args']
+    return msgs
+
 
 def humanize_get_lobby_sessions(test_client):
     return test_client.get('/api/lobby/sessions').json
@@ -208,6 +217,79 @@ def test_handle_msg(app, websockets_client, api_test_client):
         print("\nSending msg...")
         print("\nResponse received after sending msg: ")
         print(humanize_send_msg(username=USER, room=ROOM, msg='Hello world!', namespace='/chat', ws_client=websockets_client_after_registering_user))
+
+        humanize_ws_disconnect(websockets_client_after_registering_user, '/chat')
+
+
+    finally:
+        print("\nCleaning up...")
+        api_test_client.get('/api/logout')
+
+
+# Test case 4
+def test_handle_vote(app, websockets_client, api_test_client):
+    try:
+        # Register the user
+        print("\nResponse received from register:")
+        print(humanize_register(test_client=api_test_client))
+        
+
+        # Host a room
+        print("\nResponse received from creating lobby: ")
+        print(humanize_host_room(room=ROOM, test_client=api_test_client))
+        
+
+        # Connect to chat now that we have a room and user
+        websockets_client_after_registering_user = socketio.test_client(app, flask_test_client=api_test_client)
+        humanize_ws_connect(websockets_client_after_registering_user, '/chat')
+
+        # Join the room
+        print("\nJoining room...\n")
+        print("\nResponse received from join after registering user: ")
+        print(humanize_join_ws_room(username=USER, room=ROOM, namespace='/chat',authenticated_ws_client=websockets_client_after_registering_user))
+
+
+        # Send message
+        print("\nSending msg...")
+        print("\nResponse received after sending msg: ")
+        print(humanize_send_msg(username=USER, room=ROOM, msg='Hello world!', namespace='/chat', ws_client=websockets_client_after_registering_user))
+
+
+        wait_time = 0.5
+        round_started = False
+        round_time = 0
+
+
+
+        while round_started == False:
+            resp = parse_events(ws_client=websockets_client_after_registering_user, namespace='/chat')
+            if resp:
+                for event, args in resp.items():
+                    if event == 'round_start':
+                        round_started = True
+                        round_time = args[0]['time']
+                wait_time += 0.5
+            else:
+                wait_time = 0.5
+
+            socketio.sleep(wait_time)
+
+
+        print("\nWaiting for session to start...")
+        for i in range(round_time):
+            resp = parse_events(ws_client=websockets_client_after_registering_user, namespace='/chat')
+            if resp:
+                for event, args in resp.items():
+                    print(f"\n📍 Websocket event occurred: {event}")
+                    if event == 'message':
+                        msg = args
+                        print(f"  ├─ {msg['from']}@{msg['timestamp']}: {msg['message']}\n")
+                wait_time += 0.25
+                socketio.sleep(wait_time)
+            else:
+                wait_time = 0.25
+
+            socketio.sleep(1)
 
         humanize_ws_disconnect(websockets_client_after_registering_user, '/chat')
 

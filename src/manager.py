@@ -45,14 +45,12 @@ class SessionManager():
 
         ## Run a round, rounds are indexed starting at 1##
         ##########################################################################################################################################
-        emit_message(sockio=socketio, action='session_start', room=session_room, data={"msg" : "Session started."}, delay=0)
-        
         current_round = 1
         current_state = self.get_session_status(session_id=session_id)
         number_of_rounds = SessionManager.MIN_HUMAN_PLAYERS_NEEDED
         self.get_active_player_count
         while current_round <= number_of_rounds: #[1, number_of_rounds+1)
-            send_server_message_with_delay(sockio=socketio, session_id=session_id, room=session_room, message=f"<h1>Round {current_round} started!</h1><p>There is a bot among you...</p>")
+            send_server_message_with_delay(sockio=socketio, session_id=session_id, room=session_room, message=f"Starting round {current_round}. There is a bot among you...")
             start_time = time.time()
             emit_message(sockio=socketio, action='round_start', room=session_room, data={"round" : current_round , "time" : SessionManager.MAX_TIME}, delay=0)
 
