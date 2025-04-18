@@ -227,7 +227,8 @@ def test_handle_msg(app, websockets_client, api_test_client):
 
 
 # Test case 4
-def test_handle_vote(app, websockets_client, api_test_client):
+def test_handle_vote(app, api_test_client):
+    websockets_client_after_registering_user    
     try:
         # Register the user
         print("\nResponse received from register:")
@@ -276,7 +277,7 @@ def test_handle_vote(app, websockets_client, api_test_client):
 
 
         print("\nWaiting for session to start...")
-        for i in range(round_time):
+        while True:
             resp = parse_events(ws_client=websockets_client_after_registering_user, namespace='/chat')
             if resp:
                 for event, args in resp.items():
@@ -284,16 +285,17 @@ def test_handle_vote(app, websockets_client, api_test_client):
                     if event == 'message':
                         msg = args
                         print(f"  ├─ {msg['from']}@{msg['timestamp']}: {msg['message']}\n")
+                    if event == 'session_end':
+                        return
                 wait_time += 0.25
                 socketio.sleep(wait_time)
             else:
                 wait_time = 0.25
 
-            socketio.sleep(1)
+            socketio.sleep(wait_time)
 
-        humanize_ws_disconnect(websockets_client_after_registering_user, '/chat')
-
-
+    
     finally:
         print("\nCleaning up...")
+        humanize_ws_disconnect(websockets_client_after_registering_user, '/chat')
         api_test_client.get('/api/logout')
