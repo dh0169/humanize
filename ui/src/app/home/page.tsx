@@ -38,21 +38,24 @@ const UserInterface: React.FC = () => {
         AI Among Us
       </h2>
 
-      <Button asChild>
-      <Link href={{
-          pathname: "/play",
-          query: { username: username } // Pass username in URL
-        }}>
-            Play</Link>
-      </Button>
+      <div className="bg-[#b7fdce] p-8 rounded-[8px] [box-shadow:0_4px_8px_rgba(0,0,0,0.1)] w-[90%] max-w-[400px]">
+        <Button asChild className="w-full p-2 mb-5 bg-[#44c4a1] text-[#fff] border-[none] rounded-[4px] cursor-pointer">
+        <Link href={{
+            pathname: "/play",
+            query: { username: username } // Pass username in URL
+          }}>
+              Play</Link>
+        </Button>
 
-      <Button asChild>
-        <Link href="/about">About</Link>
-      </Button>
+        <Button asChild className="w-full p-2 mb-5 bg-[#44c4a1] text-[#fff] border-[none] rounded-[4px] cursor-pointer">
+          <Link href="/about">About</Link>
+        </Button>
 
-      <Button asChild>
-        <Link href="/logout">Logout</Link>
-      </Button>
+        <Button asChild className="w-full p-2 bg-[#44c4a1] text-[#fff] border-[none] rounded-[4px] cursor-pointer">
+          <Link href="/logout">Logout</Link>
+        </Button>
+      </div>
+      
     </div>
   );
 }

@@ -51,7 +51,6 @@ const Registration = () => {
   };
 
 
-  // Look into "tabs" elements on shadcn -> register/login
   return (
 
     <div className="flex flex-col items-center justify-center min-h-screen gap-4">

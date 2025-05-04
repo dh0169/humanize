@@ -1,8 +1,8 @@
 // src/constants/apiEndpoints.ts
 
-// const BASE_API_URL = 'https://humanize.live/api'
+const BASE_API_URL = 'https://humanize.live/api'
 //const BASE_API_URL = 'http://127.0.0.1:8080/api';
-const BASE_API_URL = '/api'
+//const BASE_API_URL = '/api'
 
 // API Endpoint Definitions
 export const API_ENDPOINTS = {

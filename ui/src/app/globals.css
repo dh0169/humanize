@@ -71,3 +71,38 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+
+.h-\[calc\(100vh-200px\)\] {
+  height: calc(100vh - 200px);
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+/* Prevent message bubbles from expanding beyond container */
+.chat-message-list > div {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.chat-message-list {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+/* Constrain chat bubble width */
+.chat-bubble {
+  max-width: 80%;
+  min-width: 120px;
+  width: auto;
+}
+
+.chat-bubble-message {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
