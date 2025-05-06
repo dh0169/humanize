@@ -7,7 +7,7 @@ from src.robot import RobotController, RobotType
 
 
 class SessionManager():
-    MAX_HUMAN_PLAYERS = 4
+    MAX_HUMAN_PLAYERS = 2
     MIN_HUMAN_PLAYERS_NEEDED = 2
     MAX_TIME = 75 # In seconds, right now 15 for testing
     VOTE_TIME = 25
