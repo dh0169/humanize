@@ -190,7 +190,7 @@ class SessionManager():
             db.commit()
             
             self.add_user(session_id=new_pending_session.id, user_id=host_id, sock=sock)
-            sock.start_background_task(self.add_bot_to_room, new_pending_session.room, sock, random.randint(5, 20))
+            sock.start_background_task(self.add_bot_to_room, new_pending_session.room, sock, random.randint(7, 20))
 
             return new_pending_session.room, f"New game session created, {room}."
 
@@ -291,7 +291,7 @@ class SessionManager():
             session_pending = tmp_session.state == SessionState.PENDING
 
             if session_pending and player_not_active and (room_for_more_players or is_bot):
-                if not tmp_session.host_id: # AI can be host
+                if not tmp_session.host_id: 
                     tmp_session.set_host(user.id)
                 
                 if is_bot:
@@ -303,7 +303,7 @@ class SessionManager():
 
                 db.flush()
 
-                if tmp_session.get_user_count() > tmp_session.max_players_allowed: # >(not inclusive) for AI
+                if tmp_session.get_user_count() >= tmp_session.max_players_allowed: # >(not inclusive) for AI
                     tmp_session.start_game()
                 
                     # Start background task for session handling
