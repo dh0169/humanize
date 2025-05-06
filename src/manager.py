@@ -286,7 +286,7 @@ class SessionManager():
             user = db.query(UserModel).filter_by(id=user_id).one()
             tmp_session = db.query(SessionModel).filter_by(id=session_id).one()
 
-            room_for_more_players = tmp_session.get_user_count() < tmp_session.max_players_allowed
+            room_for_more_players = tmp_session.get_user_count() <= tmp_session.max_players_allowed
             player_not_active = user.state != UserState.ACTIVE
             session_pending = tmp_session.state == SessionState.PENDING
 
