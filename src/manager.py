@@ -9,8 +9,8 @@ from src.robot import RobotController, RobotType
 class SessionManager():
     MAX_HUMAN_PLAYERS = 4
     MIN_HUMAN_PLAYERS_NEEDED = 2
-    MAX_TIME = 100 # In seconds, right now 15 for testing
-    VOTE_TIME = 20
+    MAX_TIME = 75 # In seconds, right now 15 for testing
+    VOTE_TIME = 25
 
     def __init__(self, users = {}, pending_sessions=[], active_sessions=[]):
         self.users = users
