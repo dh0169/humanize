@@ -22,7 +22,7 @@ def chat():
     return render_template("chat.html", placeHolders={"username" : "Enter a name..."})
 
 @bp.route("/debug")
-@auth.login_required()
+#@auth.login_required()
 def debug():
     # if auth.current_user() == HUMANIZE_ADMIN:
     return render_template("debug.html")
