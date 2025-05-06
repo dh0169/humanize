@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from "react";
 import ChatComponent from "@/components/wschat";
 import { useSearchParams } from 'next/navigation';
-import { API_ENDPOINTS } from "@/constants/apiEndpoints";
+import { API_ENDPOINTS, getSessions } from "@/constants/apiEndpoints";
 import { Button } from "@/components/ui/button";
 
 const Play: React.FC = () => {
@@ -64,7 +64,24 @@ const Play: React.FC = () => {
   
     const handleRoomManagement = async () => {
       try {
-        // First attempt to join random room
+        // First check existing sessions
+        const sessions = await getSessions();
+        const pendingSessions = sessions.pending_sessions || [];
+        
+        // Find any session where user is already a player
+        const existingSession = pendingSessions.find(session => 
+          session.players.some(player => 
+            player.username === username // Use username as ID if IDs not available
+          )
+        );
+  
+        if (existingSession) {
+          setRoomId(existingSession.room);
+          setStatus('ready');
+          return;
+        }
+  
+        // If no existing session, proceed with normal flow
         const joinResponse = await fetch(API_ENDPOINTS.LOBBY.BASE, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -84,7 +101,7 @@ const Play: React.FC = () => {
           return;
         }
   
-        // If join failed, host new room with retry logic
+        // If join failed, host new room
         const hostedRoomId = await handleHostSession();
         setRoomId(hostedRoomId);
         setStatus('ready');
