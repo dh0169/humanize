@@ -32,7 +32,7 @@ try:
 except:
     users = {}
 
-HUMANIZE_ORIGINS = os.environ.get("HUMANIZE_ORIGINS", ["http://localhost:3000", "https://humanize.live", "http://localhost:8080"])
+HUMANIZE_ORIGINS = os.environ.get("HUMANIZE_ORIGINS", ["http://127.0.0.1:3000", "http://localhost:3000", "https://humanize.live", "http://localhost:8080"])
 
 
 auth = HTTPBasicAuth()
