@@ -7,10 +7,10 @@ from src.robot import RobotController, RobotType
 
 
 class SessionManager():
-    MAX_HUMAN_PLAYERS = 4
+    MAX_HUMAN_PLAYERS = 2
     MIN_HUMAN_PLAYERS_NEEDED = 2
-    MAX_TIME = 100 # In seconds, right now 15 for testing
-    VOTE_TIME = 20
+    MAX_TIME = 75 # In seconds, right now 15 for testing
+    VOTE_TIME = 25
 
     def __init__(self, users = {}, pending_sessions=[], active_sessions=[]):
         self.users = users
@@ -286,7 +286,7 @@ class SessionManager():
             user = db.query(UserModel).filter_by(id=user_id).one()
             tmp_session = db.query(SessionModel).filter_by(id=session_id).one()
 
-            room_for_more_players = tmp_session.get_user_count() < tmp_session.max_players_allowed
+            room_for_more_players = tmp_session.get_user_count() <= tmp_session.max_players_allowed
             player_not_active = user.state != UserState.ACTIVE
             session_pending = tmp_session.state == SessionState.PENDING
 

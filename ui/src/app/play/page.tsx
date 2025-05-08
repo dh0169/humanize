@@ -64,24 +64,28 @@ const Play: React.FC = () => {
   
     const handleRoomManagement = async () => {
       try {
-        // First check existing sessions
+        // Check existing sessions first
         const sessions = await getSessions();
-        const pendingSessions = sessions.pending_sessions || [];
-        
-        // Find any session where user is already a player
-        const existingSession = pendingSessions.find(session => 
+        const allSessions = [
+          ...(sessions.active_sessions || []),
+          ...(sessions.pending_sessions || [])
+        ];
+  
+        // Find existing session for user
+        const existingSession = allSessions.find(session => 
           session.players.some(player => 
-            player.username === username // Use username as ID if IDs not available
+            player.username.trim().toLowerCase() === username.trim().toLowerCase()
           )
         );
   
         if (existingSession) {
+          console.log('Found existing session:', existingSession.room);
           setRoomId(existingSession.room);
           setStatus('ready');
           return;
         }
   
-        // If no existing session, proceed with normal flow
+        // Attempt to join random room
         const joinResponse = await fetch(API_ENDPOINTS.LOBBY.BASE, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -95,19 +99,46 @@ const Play: React.FC = () => {
   
         const joinData = await joinResponse.json();
         
-        if (joinData.status === "ok" && joinData.room) {
+        if (joinData.status === "ok") {
+          console.log('Joined existing room:', joinData.room);
           setRoomId(joinData.room);
           setStatus('ready');
           return;
         }
   
-        // If join failed, host new room
+        // Handle specific "already in session" error
+        if (joinData.message?.includes("already in a session")) {
+          console.log('User already in session - retrieving...');
+          const sessions = await getSessions();
+          const currentSession = sessions.active_sessions.find(s => 
+            s.players.some(p => p.username === username)
+          );
+          if (currentSession) {
+            setRoomId(currentSession.room);
+            setStatus('ready');
+            return;
+          }
+        }
+  
+        // Host new room as fallback
+        console.log('Hosting new room...');
         const hostedRoomId = await handleHostSession();
         setRoomId(hostedRoomId);
         setStatus('ready');
         
       } catch (error) {
-        console.error('Room error:', error);
+        console.error('Room management error:', error);
+        if (error.message.includes("already in a session")) {
+          const sessions = await getSessions();
+          const currentSession = sessions.active_sessions.find(s => 
+            s.players.some(p => p.username === username)
+          );
+          if (currentSession) {
+            setRoomId(currentSession.room);
+            setStatus('ready');
+            return;
+          }
+        }
         setStatus('error');
       }
     };
