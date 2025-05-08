@@ -39,10 +39,11 @@ def handle_disconnect(input):
 				current_session = db.query(SessionModel).filter_by(id=tmp_user.session_id).one_or_none() 
 				print(current_session)
 				if current_session:
-					session_manager.disconnect_player(tmp_user.id)
 					tmp_user.state = UserState.DISCONNECTED
 					disconnect_msg = send_message(sockio=socketio, sender_name="Server", session_id=None, room=current_session.room, message=f'{tmp_user.username} has disconnected!')
-					print(current_session.messages)#.append(disconnect_msg)
+					#current_session.messages.append(disconnect_msg)
+
+					session_manager.disconnect_player(tmp_user.id)
 			print(f"User {tmp_user.username} has disconnected!")
 
 
