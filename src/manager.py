@@ -303,7 +303,7 @@ class SessionManager():
 
                 db.flush()
 
-                if tmp_session.get_user_count() >= tmp_session.max_players_allowed: # >(not inclusive) for AI
+                if tmp_session.get_user_count() > tmp_session.max_players_allowed: # >(not inclusive) for AI
                     tmp_session.start_game()
                 
                     # Start background task for session handling
