@@ -51,8 +51,8 @@ class SessionManager():
         self.get_active_player_count
         while current_round <= number_of_rounds: #[1, number_of_rounds+1)
             send_server_message_with_delay(sockio=socketio, session_id=session_id, room=session_room, message=f"Starting round {current_round}. There is a bot among you...")
-            start_time = time.time()
             emit_message(sockio=socketio, action='round_start', room=session_room, data={"round" : current_round , "time" : SessionManager.MAX_TIME}, delay=0)
+            start_time = time.time()
 
             while current_state == SessionState.ACTIVE:
                 # Elapsed time 2 minutes?
@@ -68,7 +68,7 @@ class SessionManager():
                     if not current_session or not current_session.enough_players():# Not enough players to continue(need min 2 person and AI)
                         break
                 
-                socketio.sleep(random.randint(3,8))
+                socketio.sleep(random.randint(2,7))
 
                 try:
                     ai_response = robot.get_response(session_id=session_id)
