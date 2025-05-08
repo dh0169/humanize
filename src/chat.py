@@ -29,7 +29,7 @@ def handle_connect():
 
 @socketio.on('disconnect', namespace='/chat')
 @is_registered
-def handle_disconnect():
+def handle_disconnect(input):
 	user_id = session['user']
 	#Everything below can become a session manager function
 	with db_session() as db:
