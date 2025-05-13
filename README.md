@@ -1,10 +1,10 @@
 # Humanize - AI Among Us
 
-**Humanize - AI Among Us** is a fun and engaging multiplayer game where 4-6 players are grouped in an online chat. The twist? One of the players is an AI! The goal of the human players is to work together, chat, and strategize to figure out which of them is actually an AI (a sneaky LLM). Can the humans fish out the AI before time runs out?
+**Humanize - AI Among Us** is a fun and engaging multiplayer game where 4 players are grouped in an online chat. The twist? One of the players is an AI! The goal of the human players is to work together, chat, and strategize to figure out which of them is actually an AI (a sneaky LLM). Can the humans fish out the AI before time runs out?
 
 ## Features
 
-- **4-6 player online multiplayer game**
+- **4 player online multiplayer game**
 - **AI-powered**: One player is secretly an AI language model (LLM) trying to blend in with the humans.
 - **Interactive gameplay**: Human players must use their communication skills to identify the AI.
 - **Fun & suspense**: The game builds suspense as players chat and try to work out who is real and who is artificial.
